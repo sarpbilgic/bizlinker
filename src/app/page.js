@@ -1,95 +1,53 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+// src/app/page.js
+"use client";
 
-export default function Home() {
+import { useState, useEffect } from "react";
+import SearchBar from "@components/SearchBar";
+import FilterSidebar from "@components/FilterSideBar";
+import BusinessCard from "@components/BusinessCard";
+import MapView from "@components/MapView";
+
+export default function HomePage() {
+  const [searchParams, setSearchParams] = useState({ query: "", location: "" });
+  const [filters, setFilters]         = useState({ categories: [], minRating: 0, maxPrice: 1000 });
+  const [businesses, setBusinesses]   = useState([]);
+  const [mapCenter, setMapCenter]     = useState([0, 0]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/business/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...searchParams, ...filters }),
+        });
+        const { businesses = [] } = await res.json();
+        setBusinesses(businesses);
+        if (businesses.length) {
+          const { lat, lng } = businesses[0].location;
+          setMapCenter([lat, lng]);
+        }
+      } catch (e) {
+        console.error("Error fetching businesses:", e);
+      }
+    })();
+  }, [searchParams, filters]);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="space-y-6">
+      <SearchBar   onSearch={setSearchParams} />
+      <div className="flex flex-col lg:flex-row">
+        <FilterSidebar
+          categories={["Food", "Beauty", "Health", "Events", "Services"]}
+          onFilter={setFilters}
         />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.js</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+          {businesses.map((b) => (
+            <BusinessCard key={b._id} business={b} />
+          ))}
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+      <MapView center={mapCenter} markers={businesses} />
     </div>
   );
 }
