@@ -4,7 +4,7 @@ import Business from '@/models/Business';
 
 export async function POST(req) {
   try {
-    await connectMongo();
+    await connectDB();
     const data = await req.json();
 
     const business = new Business(data);

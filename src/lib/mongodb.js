@@ -1,4 +1,3 @@
-// src/lib/mongodb.js
 import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -13,7 +12,7 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
-async function connectMongo() {
+async function connectDB() {
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
@@ -23,4 +22,4 @@ async function connectMongo() {
   return cached.conn;
 }
 
-export default connectMongo;
+export default connectDB;
