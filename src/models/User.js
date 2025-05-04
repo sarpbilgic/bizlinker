@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-  email: String,
-  password: String,
-  userType: String, // business or consumer
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  userType: { type: String, enum: ["consumer", "business"], required: true },
 });
 
 export default mongoose.models.User || mongoose.model("User", userSchema);

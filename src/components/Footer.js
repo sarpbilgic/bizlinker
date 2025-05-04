@@ -1,14 +1,24 @@
-'use client'
+'use client';
+import { useState, useEffect } from 'react';
 
-import { useState } from 'react'
-import '@app/globals.css';
 export default function Footer() {
-    return (
-      <footer className="bg-gray-100 py-6 mt-8">
-        <div className="container mx-auto text-center text-gray-500 text-sm">
-          © {new Date().getFullYear()} BizLinker. All rights reserved.
-        </div>
-      </footer>
-    );
-  }
-  
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/business/categories')
+      .then((res) => res.json())
+      .then((data) => setCategories(data));
+  }, []);
+
+  return (
+    <footer className="bg-white border-t mt-auto">
+      <div className="container mx-auto p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 text-xs">
+        {categories.map((cat) => (
+          <a key={cat} href={`/?category=${cat}`} className="hover:underline capitalize truncate">
+            {cat}
+          </a>
+        ))}
+      </div>
+    </footer>
+  );
+}

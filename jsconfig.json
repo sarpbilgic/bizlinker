@@ -8,12 +8,9 @@
 
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "src",
     "paths": {
-      "@components/*": ["src/components/*"],
-      "@styles/*": ["src/styles/*"],
-      "@app/*": ["src/app/*"],
-      "@lib/*": ["src/lib/*"]
+      "@/*": ["*"]
     }
   }
 }

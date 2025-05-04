@@ -1,4 +1,4 @@
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@/lib/mongodb";
 import Business from "@/models/Business";
 import { verifyToken } from "@/utils/auth";
 
