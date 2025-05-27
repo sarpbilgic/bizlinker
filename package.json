@@ -1,5 +1,6 @@
 {
   "name": "bizlinker-web",
+  "type": "module",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,19 +10,32 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.3",
+    "@heroicons/react": "^2.2.0",
     "@tailwindcss/postcss": "^4.1.4",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.5.0",
+    "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.503.0",
+    "mongodb": "^6.16.0",
     "mongoose": "^8.14.0",
     "next": "^15.3.1",
     "postcss": "^8.5.3",
+    "puppeteer": "^24.8.2",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-leaflet": "^5.0.0",
-    "tailwindcss": "^4.1.4"
+    "slugify": "^1.6.6",
+    "swiper": "^11.2.8",
+    "tailwindcss": "^4.1.4",
+    "zod": "^3.24.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

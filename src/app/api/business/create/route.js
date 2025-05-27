@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/mongodb";
 import Business from "@/models/Business";
 import { verifyToken } from "@/utils/auth";
+import { z } from "zod";
 
 export async function POST(req) {
   try {
@@ -17,11 +18,27 @@ export async function POST(req) {
     }
 
     const data = await req.json();
+
+    // ✅ Validation
+    const schema = z.object({
+      name: z.string().min(1),
+      category: z.string().min(1),
+      location: z.object({
+        lat: z.number(),
+        lng: z.number(),
+      }),
+    });
+
+    const parsed = schema.safeParse(data);
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: parsed.error.errors }), { status: 400 });
+    }
+
     await connectDB();
 
     const business = await Business.create({
-      ...data,
-      userId: user.id || user._id, 
+      ...parsed.data,
+      userId: user.id || user._id,
     });
 
     return new Response(JSON.stringify(business), {
@@ -33,7 +50,6 @@ export async function POST(req) {
     console.error("Error creating business:", error);
     return new Response(JSON.stringify({ error: "Internal Server Error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
     });
   }
 }

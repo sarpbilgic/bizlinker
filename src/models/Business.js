@@ -1,30 +1,41 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const BusinessSchema = new mongoose.Schema({
-  userId: mongoose.Schema.Types.ObjectId,
-  name: String,
-  category: String, 
-  description: String,
+const businessSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  website: {
+    type: String,
+    required: true,
+  },
+  address: {
+    type: String,
+    default: '',
+  },
+  phone: {
+    type: String,
+    default: '',
+  },
   location: {
     type: {
       type: String,
-      enum: ["Point"],
-      default: "Point",
+      enum: ['Point'],
+      default: 'Point',
     },
     coordinates: {
       type: [Number], // [longitude, latitude]
       required: true,
     },
   },
-  services: [
-    {
-      name: String,
-      price: Number,
-      description: String,
-    },
-  ],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-BusinessSchema.index({ location: "2dsphere" }); // enables $near
+// Geospatial index
+businessSchema.index({ location: '2dsphere' });
 
-export default mongoose.models.Business || mongoose.model("Business", BusinessSchema);
+export default mongoose.models.Business || mongoose.model('Business', businessSchema);
