@@ -33,10 +33,6 @@ function parsePrice(priceStr) {
   }
 }
 
-function detectBrand(name) {
-  return name?.split(' ')[0] || '';
-}
-
 async function scrapeCategory(page, category, businessId) {
   let totalProducts = 0;
 
@@ -73,7 +69,6 @@ async function scrapeCategory(page, category, businessId) {
         const priceText = await product.$eval('.discountPriceSpan', el => el.innerText.trim());
         const image = await product.$eval('img', el => el.getAttribute('src'));
         const price = parsePrice(priceText);
-        const brand = await product.$eval('.productMarka', el => el.innerText.trim()).catch(() => detectBrand(name));
 
         if (!name || !price || !productUrl) continue;
 
@@ -82,7 +77,6 @@ async function scrapeCategory(page, category, businessId) {
           {
             name,
             price,
-            brand,
             business: businessId,
             businessName: 'Fıstık Bilgisayar',
             image,

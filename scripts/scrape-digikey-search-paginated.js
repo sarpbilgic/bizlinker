@@ -15,7 +15,7 @@ const SEARCH_QUERIES = [
   'depolama-ürünleri',
   'oyuncu-ekipmanlari',
   'telefon',
-  'tüketici-elektronigi'
+  'tuketici-elektronigi'
 ];
 const MAX_PAGES_PER_QUERY = 20;
 
@@ -27,9 +27,6 @@ function parsePrice(text) {
   }
 }
 
-function detectBrand(name) {
-  return name?.split(' ')[0] || '';
-}
 
 async function scrapeSearchPages(page, query, businessId) {
   const results = [];
@@ -84,14 +81,11 @@ async function scrapeSearchPages(page, query, businessId) {
           productUrl = `${BASE_URL}/arama/?src=${encodeURIComponent(name)}`;
         }
 
-        const brand = detectBrand(name);
-
         await Product.findOneAndUpdate(
           { productUrl },
           {
             name,
             price,
-            brand,
             business: businessId,
             businessName: 'Digikey Computer',
             image,

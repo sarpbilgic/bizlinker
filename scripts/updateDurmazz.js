@@ -20,24 +20,25 @@ function parsePrice(text) {
 }
 
 async function scrapeAllPages(page, businessId) {
-  const allProducts = [];
   let pageNum = 1;
+  let updatedCount = 0;
+  let skippedCount = 0;
 
   while (pageNum <= 85) {
     const url = `${BASE_URL}/tr/shop?page=${pageNum}`;
-    console.log(`Fetching: ${url}`);
+    console.log(`🔎 Sayfa: ${url}`);
 
     try {
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
       await new Promise(resolve => setTimeout(resolve, 1500));
     } catch (error) {
-      console.warn(`Timeout on page ${pageNum}, stopping.`);
+      console.warn(`⛔ Sayfa ${pageNum} zaman aşımı, durduruluyor.`);
       break;
     }
 
     const productForms = await page.$$(`#products_grid form`);
     if (productForms.length === 0) {
-      console.log(`No products found on page ${pageNum}, ending early.`);
+      console.log(`🚫 Sayfa ${pageNum} boş, erken çıkılıyor.`);
       break;
     }
 
@@ -61,23 +62,34 @@ async function scrapeAllPages(page, businessId) {
 
         if (!priceTL) continue;
 
+        const existing = await Product.findOne({ productUrl: link });
 
-        await Product.findOneAndUpdate(
-          { productUrl: link },
-          {
-            name,
-            price: priceTL,
-            categories: [],
-            image,
-            productUrl: link,
-            business: businessId,
-            businessName: 'Durmazz',
-          },
-          { upsert: true, new: true }
-        );
-
-        allProducts.push(name);
+        if (existing) {
+          if (existing.price !== priceTL) {
+            await Product.updateOne(
+              { _id: existing._id },
+              {
+                $set: {
+                  price: priceTL,
+                  updatedAt: new Date(),
+                  image,
+                },
+                $push: {
+                  priceHistory: { price: priceTL, date: new Date() },
+                },
+              }
+            );
+            updatedCount++;
+            console.log(`✅ Güncellendi: ${name} (${existing.price} → ${priceTL})`);
+          } else {
+            skippedCount++;
+            console.log(`🟡 Aynı fiyat, atlandı: ${name}`);
+          }
+        } else {
+          console.log(`⏩ Yeni ürün tespit edildi, eklenmedi: ${name}`);
+        }
       } catch (err) {
+        console.warn('⚠️ Ürün işlenemedi:', err.message);
         continue;
       }
     }
@@ -85,12 +97,12 @@ async function scrapeAllPages(page, businessId) {
     pageNum++;
   }
 
-  return allProducts.length;
+  return { updatedCount, skippedCount };
 }
 
 async function main() {
   await mongoose.connect(process.env.MONGO_URI);
-  console.log('MongoDB connected');
+  console.log('📡 MongoDB bağlantısı kuruldu');
 
   const businessName = 'Durmazz';
   const businessUrl = BASE_URL;
@@ -99,20 +111,21 @@ async function main() {
   let business = await Business.findOne({ name: businessName });
   if (!business) {
     business = await Business.create({ name: businessName, website: businessUrl, location });
-    console.log('Business created');
+    console.log('🏢 İşletme eklendi');
   }
 
   const browser = await puppeteer.launch({ headless: 'new' });
   const page = await browser.newPage();
 
-  const total = await scrapeAllPages(page, business._id);
+  const { updatedCount, skippedCount } = await scrapeAllPages(page, business._id);
 
   await browser.close();
-  console.log(`Toplam ${total} ürün MongoDB’ye işlendi`);
+  console.log(`\n🟢 Güncellenen ürün sayısı: ${updatedCount}`);
+  console.log(`🟡 Değişmeyen ürün sayısı: ${skippedCount}`);
   process.exit();
 }
 
 main().catch((err) => {
-  console.error(' Scraper error:', err);
+  console.error('💥 Scraper error:', err);
   process.exit(1);
 });

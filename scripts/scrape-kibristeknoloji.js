@@ -35,9 +35,6 @@ function parsePrice(priceStr) {
   }
 }
 
-function detectBrand(name) {
-  return name?.split(' ')[0] || '';
-}
 
 async function scrapeCategory(page, category, businessId) {
   let totalProducts = 0;
@@ -78,7 +75,6 @@ async function scrapeCategory(page, category, businessId) {
 
         const priceUSD = parsePrice(priceText);
         const priceTL = Math.round(priceUSD * EXCHANGE_RATE);
-        const brand = detectBrand(name);
 
         if (!name || !priceTL || !productUrl) {
           console.warn(`⚠️ Incomplete product at index ${index}, skipped.`);
@@ -90,7 +86,6 @@ async function scrapeCategory(page, category, businessId) {
           {
             name,
             price: priceTL,
-            brand,
             business: businessId,
             businessName: 'Kıbrıs Teknoloji',
             image,

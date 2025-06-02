@@ -15,10 +15,22 @@ const productSchema = new mongoose.Schema({
   subcategory: String,
   category_item: String,
   category_slug: String,
+  categorized: { type: Boolean, default: false },
+  grouped: { type: Boolean, default: false },
   createdAt: {
     type: Date,
     default: Date.now,
   },
+  updatedAt: Date,
+  priceHistory: [
+    {
+      price: Number,
+      date: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
 });
 
 export default mongoose.models.Product || mongoose.model('Product', productSchema);
