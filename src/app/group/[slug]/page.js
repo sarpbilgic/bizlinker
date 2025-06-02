@@ -23,7 +23,7 @@ export default async function GroupPage({ params }) {
         {groupProducts.map((p) => (
           <div
             key={p._id.toString()}
-            className="flex items-start gap-4 border border-gray-200 dark:border-white/10 rounded-lg p-4 bg-white dark:bg-zinc-900 shadow-sm"
+            className="flex items-start gap-4 border border-gray-200 dark:border-white/10 rounded-lg p-4 bg-white dark:bg-white shadow-sm"
           >
             <ImageWithFallback
               src={p.image || '/no-image.png'}
@@ -32,15 +32,15 @@ export default async function GroupPage({ params }) {
             />
             <div className="flex-1 flex flex-col justify-between">
               <div>
-                <h2 className="text-base font-semibold mb-2 text-gray-800 dark:text-white">
+                <h2 className="text-base font-semibold mb-2 text-gray-800 dark:text-black">
                   {p.name}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                  Satıcı: <span className="font-medium text-black dark:text-white">{p.businessName}</span>
+                  Satıcı: <span className="font-medium text-black dark:text-black">{p.businessName}</span>
                 </p>
               </div>
               <div className="flex justify-between items-end">
-                <p className="text-green-600 font-bold text-xl">
+                <p className="text-orange-500 font-bold text-xl">
                   {typeof p.price === 'number' ? `${p.price.toLocaleString('tr-TR')} ₺` : 'Fiyat Yok'}
                 </p>
                 <a
