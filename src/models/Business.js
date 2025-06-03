@@ -14,10 +14,6 @@ const businessSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
-  phone: {
-    type: String,
-    default: '',
-  },
   location: {
     type: {
       type: String,
@@ -35,7 +31,6 @@ const businessSchema = new mongoose.Schema({
   },
 });
 
-// Geospatial index
 businessSchema.index({ location: '2dsphere' });
 
 export default mongoose.models.Business || mongoose.model('Business', businessSchema);
