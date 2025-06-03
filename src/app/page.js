@@ -72,7 +72,7 @@ export default function HomePage() {
           </h1>
           
           <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto">
-            Binlerce ürün arasından en uygun fiyatlı olanını bul. 3 farklı firmadan anlık fiyat karşılaştırması yap.
+            Binlerce ürün arasından en uygun fiyatlı olanını bul. 4 farklı firmadan anlık fiyat karşılaştırması yap.
           </p>
 
           {/* Enhanced Search Bar */}
