@@ -1,12 +1,11 @@
 // GET /api/business?name=Fıstık%20Bilgisayar
 
-import { connectDB } from '@/lib/mongodb';
 import Business from '@/models/Business';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET(req) {
-  await connectDB();
+export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
   const name = searchParams.get('name');
 
@@ -27,4 +26,4 @@ export async function GET(req) {
     coordinates: business.location.coordinates,
     productCount
   });
-}
+});

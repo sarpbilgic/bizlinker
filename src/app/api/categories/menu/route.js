@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import mongoose from 'mongoose';
 import Category from '@/models/Category';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET() {
-  await mongoose.connect(process.env.MONGO_URI);
+export const GET = withDB(async () => {
 
   const categories = await Category.find();
 
@@ -30,4 +29,4 @@ export async function GET() {
   }));
 
   return NextResponse.json(result);
-}
+});

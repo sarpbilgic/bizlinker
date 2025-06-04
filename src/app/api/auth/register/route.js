@@ -1,11 +1,10 @@
-import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
+import { withDB } from '@/lib/api-utils';
 
-export async function POST(req) {
+export const POST = withDB(async (req) => {
   try {
-    await connectDB();
 
     const body = await req.json();
 
@@ -48,4 +47,4 @@ export async function POST(req) {
       status: 500,
     });
   }
-}
+});

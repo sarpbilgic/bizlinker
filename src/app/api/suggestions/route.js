@@ -1,11 +1,10 @@
 // ✅ /api/suggestions/route.js
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET(req) {
-  await connectDB();
+export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get('q');
 
@@ -55,4 +54,4 @@ export async function GET(req) {
   };
 
   return NextResponse.json(suggestions);
-}
+});

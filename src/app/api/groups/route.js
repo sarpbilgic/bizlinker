@@ -1,23 +1,15 @@
 // GET /api/groups?main=&sub=&item=&brand=&category_slug=&group_slug=&q=&sort=&lat=&lng=&radius=
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
+import { withDB, getFiltersFromQuery } from '@/lib/api-utils';
 
-export async function GET(req) {
-  await connectDB();
+export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
 
   // FİLTRELER
-  const filters = {};
-  if (searchParams.get('main')) filters.main_category = searchParams.get('main');
-  if (searchParams.get('sub')) filters.subcategory = searchParams.get('sub');
-  if (searchParams.get('item')) filters.category_item = searchParams.get('item');
-  if (searchParams.get('brand')) filters.brand = searchParams.get('brand');
-  if (searchParams.get('category_slug')) filters.category_slug = searchParams.get('category_slug');
-  if (searchParams.get('group_slug')) filters.group_slug = searchParams.get('group_slug');
-  if (searchParams.get('q')) filters.group_title = { $regex: searchParams.get('q'), $options: 'i' };
+  const filters = getFiltersFromQuery(searchParams);
 
   // SIRALAMA
   const sort = searchParams.get('sort');
@@ -92,4 +84,4 @@ export async function GET(req) {
 
   const result = await Product.aggregate(pipeline);
   return NextResponse.json(result);
-}
+});

@@ -1,11 +1,10 @@
 // ✅ /api/products/route.js
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB, getFiltersFromQuery } from '@/lib/api-utils';
 
-export async function GET(req) {
-  await connectDB();
+export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
 
   const id = searchParams.get('id');
@@ -16,12 +15,8 @@ export async function GET(req) {
       : NextResponse.json({ error: 'Product not found' }, { status: 404 });
   }
 
-  const filters = {};
-  ['main_category', 'subcategory', 'category_item', 'brand', 'category_slug', 'group_slug'].forEach((key) => {
-    const val = searchParams.get(key);
-    if (val) filters[key] = val;
-  });
+  const filters = getFiltersFromQuery(searchParams);
 
   const products = await Product.find(filters).limit(100);
   return NextResponse.json(products);
-}
+});

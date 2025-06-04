@@ -1,11 +1,10 @@
-import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { withDB } from '@/lib/api-utils';
 
-export async function POST(req) {
+export const POST = withDB(async (req) => {
   try {
-    await connectDB();
 
     const { email, password } = await req.json();
 
@@ -42,4 +41,4 @@ export async function POST(req) {
     console.error('LOGIN ERROR:', err);
     return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
   }
-}
+});

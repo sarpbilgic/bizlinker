@@ -1,11 +1,10 @@
 // src/app/api/group/[slug]/comparison/route.js
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET(_, { params }) {
-  await connectDB();
+export const GET = withDB(async (_, { params }) => {
   const { slug } = params;
 
   const products = await Product.find({ group_slug: slug });
@@ -34,4 +33,4 @@ export async function GET(_, { params }) {
   };
 
   return NextResponse.json(response);
-}
+});

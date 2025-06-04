@@ -1,17 +1,13 @@
 //api/search/route.js
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB, getFiltersFromQuery } from '@/lib/api-utils';
 
-export async function GET(req) {
-  await connectDB();
+export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
 
   const query = searchParams.get('query')?.toLowerCase();
-  const main = searchParams.get('main');
-  const sub = searchParams.get('sub');
-  const item = searchParams.get('item');
-  const brand = searchParams.get('brand');
+  const filters = getFiltersFromQuery(searchParams);
   const min = parseFloat(searchParams.get('min')) || 0;
   const max = parseFloat(searchParams.get('max')) || 999999;
 
@@ -19,10 +15,7 @@ export async function GET(req) {
     price: { $gte: min, $lte: max },
   };
 
-  if (main) match.main_category = main;
-  if (sub) match.subcategory = sub;
-  if (item) match.category_item = item;
-  if (brand) match.brand = brand;
+  Object.assign(match, filters);
   if (query) {
     match.$or = [
       { name: { $regex: query, $options: 'i' } },
@@ -58,4 +51,4 @@ export async function GET(req) {
 
   const results = await Product.aggregate(pipeline);
   return NextResponse.json(results);
-}
+});

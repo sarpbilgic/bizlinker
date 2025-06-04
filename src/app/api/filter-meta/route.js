@@ -1,22 +1,12 @@
 // 📁 /api/filter-meta/route.js
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB, getFiltersFromQuery } from '@/lib/api-utils';
 
-export async function GET(req) {
-  await connectDB();
-
+export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
-  const filters = {};
-
-  // Filtre parametrelerini oku
-  if (searchParams.get('main')) filters.main_category = searchParams.get('main');
-  if (searchParams.get('sub')) filters.subcategory = searchParams.get('sub');
-  if (searchParams.get('item')) filters.category_item = searchParams.get('item');
-  if (searchParams.get('brand')) filters.brand = searchParams.get('brand');
-  if (searchParams.get('category_slug')) filters.category_slug = searchParams.get('category_slug');
-  if (searchParams.get('group_slug')) filters.group_slug = searchParams.get('group_slug');
+  const filters = getFiltersFromQuery(searchParams);
 
   const pipeline = [
     { $match: filters },
@@ -68,4 +58,4 @@ export async function GET(req) {
     maxPrice: data.priceRange[0]?.maxPrice || 0,
     businessCount: data.businessCount[0]?.count || 0
   });
-}
+});

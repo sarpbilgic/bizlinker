@@ -1,11 +1,10 @@
 // GET /api/businesses?lat=...&lng=...&radius=...
 
-import { connectDB } from '@/lib/mongodb';
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET(req) {
-  await connectDB();
+export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
 
   const lat = parseFloat(searchParams.get('lat'));
@@ -36,4 +35,4 @@ export async function GET(req) {
 
   const all = await Business.find({}, { _id: 0, name: 1, website: 1 });
   return NextResponse.json(all);
-}
+});

@@ -1,10 +1,9 @@
 //api/features/route.js
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET() {
-  await connectDB();
+export const GET = withDB(async () => {
 
   const pipeline = [
     {
@@ -33,4 +32,4 @@ export async function GET() {
 
   const result = await Product.aggregate(pipeline);
   return NextResponse.json(result);
-}
+});

@@ -1,11 +1,10 @@
 ///api/categories/route.js
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET(req) {
-  await connectDB();
+export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
   const type = searchParams.get('type');
 
@@ -24,7 +23,7 @@ export async function GET(req) {
 
   const categories = await Product.distinct('main_category');
   return NextResponse.json(categories);
-}
+});
 
 
 /*import { connectDB } from '@/lib/mongodb';

@@ -1,11 +1,10 @@
 // GET /api/price-history?group_slug=...
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET(req) {
-  await connectDB();
+export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
   const slug = searchParams.get('group_slug');
 
@@ -47,4 +46,4 @@ export async function GET(req) {
 
   const result = await Product.aggregate(pipeline);
   return NextResponse.json(result);
-}
+});
