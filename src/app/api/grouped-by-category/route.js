@@ -1,8 +1,25 @@
 
 import Product from '@/models/Product';
-import { withDB } from '@/lib/api-utils';
+import { NextResponse } from 'next/server';
+import { withDB, errorResponse } from '@/lib/api-utils';
+import { z } from 'zod';
 
-export const GET = withDB(async () => {
+export const GET = withDB(async (req) => {
+  const { searchParams } = new URL(req.url);
+  const params = Object.fromEntries(searchParams.entries());
+
+  const schema = z.object({
+    limit: z
+      .preprocess(v => (v === undefined || v === '' ? undefined : parseInt(v, 10)), z.number().int().positive())
+      .optional()
+  });
+
+  const parsed = schema.safeParse(params);
+  if (!parsed.success) {
+    return errorResponse(parsed.error.errors, 400);
+  }
+
+  const { limit = 5 } = parsed.data;
 
   const categories = await Product.aggregate([
     {
@@ -22,8 +39,8 @@ export const GET = withDB(async () => {
         }
       }
     },
-    { $limit: 5 } // istersen filtre eklenebilir
+    { $limit: limit }
   ]);
 
-  return Response.json(categories);
+  return NextResponse.json(categories);
 });
