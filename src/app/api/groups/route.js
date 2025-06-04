@@ -4,8 +4,13 @@ import Product from '@/models/Product';
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
 import { withDB, getFiltersFromQuery } from '@/lib/api-utils';
+import { authenticate } from '@/middleware/auth';
 
 export const GET = withDB(async (req) => {
+  const user = authenticate(req);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const { searchParams } = new URL(req.url);
 
   // FİLTRELER
