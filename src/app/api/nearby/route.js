@@ -1,4 +1,4 @@
-// GET /api/nearby?lat=35.1&lng=33.9&radius=30
+// GET /api/nearby?lat=35.1&lng=33.9&maxDistance=30000
 
 import Product from '@/models/Product';
 import Business from '@/models/Business';
@@ -10,9 +10,9 @@ export const GET = withDB(async (req) => {
 
   const lat = parseFloat(searchParams.get('lat'));
   const lng = parseFloat(searchParams.get('lng'));
-  const radius = parseFloat(searchParams.get('radius')) || 50; // km cinsinden
+  const maxDistance = parseFloat(searchParams.get('maxDistance')) || 50000; // metre
 
-  if (!lat || !lng) {
+  if (isNaN(lat) || isNaN(lng)) {
     return NextResponse.json({ error: 'lat ve lng parametreleri zorunludur.' }, { status: 400 });
   }
 
@@ -22,7 +22,7 @@ export const GET = withDB(async (req) => {
         near: { type: 'Point', coordinates: [lng, lat] },
         distanceField: 'distance',
         spherical: true,
-        maxDistance: radius * 1000, // metre cinsinden
+        maxDistance,
       },
     },
     {

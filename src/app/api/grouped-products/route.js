@@ -11,11 +11,10 @@ export const GET = withDB(async (req) => {
   let sortStage = {};
   const sort = searchParams.get('sort');
 
-  
   if (sort === 'minPrice_asc') sortStage = { minPrice: 1 };
   else if (sort === 'maxPrice_desc') sortStage = { maxPrice: -1 };
   else if (sort === 'count_desc') sortStage = { count: -1 };
-  else sortStage = { count: -1 }; // varsayılan
+  else sortStage = { minPrice: 1 }; // varsayılan
 
   // Aggregation pipeline
   const pipeline = [
