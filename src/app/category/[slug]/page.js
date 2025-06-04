@@ -28,7 +28,10 @@ export default function CategoryPage() {
     
     setLoading(true);
     fetch(`/api/category/${categorySlug}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Category fetch failed');
+        return res.json();
+      })
       .then(data => {
         setProducts(Array.isArray(data) ? data : []);
         setLoading(false);

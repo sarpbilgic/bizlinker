@@ -70,8 +70,8 @@ export default function RegisterPage() {
       } else {
         setError(data.error || 'Kayıt olurken bir hata oluştu');
       }
-    } catch {
-      setError('Kayıt olurken bir hata oluştu');
+    } catch (err) {
+      setError(err.message || 'Kayıt olurken bir hata oluştu');
     } finally {
       setLoading(false);
     }

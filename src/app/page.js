@@ -20,14 +20,20 @@ export default function HomePage() {
 
   useEffect(() => {
     fetch('/api/grouped-by-category')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load sections');
+        return res.json();
+      })
       .then((data) => {
         setSections(data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
     fetch('/api/categories')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load categories');
+        return res.json();
+      })
       .then((data) => setCategories(data))
       .catch(() => {});
   }, []);

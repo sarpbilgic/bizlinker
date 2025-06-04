@@ -26,7 +26,10 @@ export default function Navbar() {
 
   useEffect(() => {
     fetch('/api/categories?type=menu')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to load categories menu');
+        return res.json();
+      })
       .then(data => setMenu(data))
       .catch(err => console.error('Failed to load categories menu', err));
   }, []);
