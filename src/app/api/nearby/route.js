@@ -3,11 +3,12 @@
 import Product from '@/models/Product';
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
-import { withDB, errorResponse } from '@/lib/api-utils';
+import { withDB, errorResponse, getPagination } from '@/lib/api-utils';
 import { z } from 'zod';
 
 export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
+  const { page, pageSize, skip, limit } = getPagination(searchParams);
   const params = Object.fromEntries(searchParams.entries());
 
   const schema = z.object({
@@ -49,7 +50,10 @@ export const GET = withDB(async (req) => {
   const businessIds = nearbyBusinesses.map(b => b._id);
   const businessDistances = Object.fromEntries(nearbyBusinesses.map(b => [b._id.toString(), b.distance]));
 
-  const products = await Product.find({ business: { $in: businessIds } }).lean();
+  const [products, total] = await Promise.all([
+    Product.find({ business: { $in: businessIds } }).skip(skip).limit(limit).lean(),
+    Product.countDocuments({ business: { $in: businessIds } })
+  ]);
 
   // Mesafe ekle
   const result = products.map(p => ({
@@ -57,5 +61,5 @@ export const GET = withDB(async (req) => {
     distance_km: (businessDistances[p.business?.toString()] / 1000).toFixed(2),
   }));
 
-  return NextResponse.json(result);
+  return NextResponse.json({ data: result, total, page, pageSize });
 });

@@ -3,7 +3,7 @@
 import Product from '@/models/Product';
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
-import { withDB, getFiltersFromQuery, errorResponse } from '@/lib/api-utils';
+import { withDB, getFiltersFromQuery, errorResponse, getPagination } from '@/lib/api-utils';
 import { z } from 'zod';
 import { authenticate } from '@/middleware/auth';
 
@@ -93,32 +93,40 @@ export const GET = withDB(async (req) => {
     pipeline.push({ $match: { group_id: { $ne: null }, ...filters } });
   }
 
-  pipeline.push(
-    {
-      $group: {
-        _id: '$group_id',
-        group_title: { $first: '$group_title' },
-        group_slug: { $first: '$group_slug' },
-        image: { $first: '$image' },
-        brands: { $addToSet: '$brand' },
-        minPrice: { $min: '$price' },
-        maxPrice: { $max: '$price' },
-        count: { $sum: 1 },
-        businesses: {
-          $push: {
-            businessName: '$businessName',
-            price: '$price',
-            productUrl: '$productUrl',
-            image: '$image',
-            ...(geoEnabled && { distance: '$distance' })
-          }
+  const groupStage = {
+    $group: {
+      _id: '$group_id',
+      group_title: { $first: '$group_title' },
+      group_slug: { $first: '$group_slug' },
+      image: { $first: '$image' },
+      brands: { $addToSet: '$brand' },
+      minPrice: { $min: '$price' },
+      maxPrice: { $max: '$price' },
+      count: { $sum: 1 },
+      businesses: {
+        $push: {
+          businessName: '$businessName',
+          price: '$price',
+          productUrl: '$productUrl',
+          image: '$image',
+          ...(geoEnabled && { distance: '$distance' })
         }
       }
-    },
+    }
+  };
+  pipeline.push(groupStage);
+
+  const { page, pageSize, skip, limit } = getPagination(searchParams);
+
+  const totalRes = await Product.aggregate([...pipeline, { $count: 'count' }]);
+  const total = totalRes[0]?.count || 0;
+
+  pipeline.push(
     { $sort: Object.keys(sortStage).length ? sortStage : { minPrice: 1 } },
-    { $limit: 100 }
+    { $skip: skip },
+    { $limit: limit }
   );
 
   const result = await Product.aggregate(pipeline);
-  return NextResponse.json(result);
+  return NextResponse.json({ data: result, total, page, pageSize });
 });

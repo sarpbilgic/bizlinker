@@ -3,10 +3,11 @@
 import Product from '@/models/Product';
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
-import { withDB } from '@/lib/api-utils';
+import { withDB, getPagination } from '@/lib/api-utils';
 
 export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
+  const { page, pageSize, skip, limit } = getPagination(searchParams);
 
   const q = searchParams.get('query') || '';
   const lat = parseFloat(searchParams.get('lat'));
@@ -32,9 +33,13 @@ export const GET = withDB(async (req) => {
     if (ids.length > 0) businessFilter.business = { $in: ids };
   }
 
-  const products = await Product.find({ ...match, ...businessFilter })
-    .limit(20)
-    .select('group_title group_slug brand category_item price productUrl image');
+  const [products, total] = await Promise.all([
+    Product.find({ ...match, ...businessFilter })
+      .skip(skip)
+      .limit(limit)
+      .select('group_title group_slug brand category_item price productUrl image'),
+    Product.countDocuments({ ...match, ...businessFilter })
+  ]);
 
-  return NextResponse.json(products);
+  return NextResponse.json({ data: products, total, page, pageSize });
 });

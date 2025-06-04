@@ -2,7 +2,7 @@
 
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
-import { withDB, getFiltersFromQuery, errorResponse } from '@/lib/api-utils';
+import { withDB, getFiltersFromQuery, errorResponse, getPagination } from '@/lib/api-utils';
 import { z } from 'zod';
 
 export const GET = withDB(async (req) => {
@@ -45,7 +45,10 @@ export const GET = withDB(async (req) => {
   }
 
   const filters = getFiltersFromQuery(new URLSearchParams(params));
-
-  const products = await Product.find(filters).limit(100);
-  return NextResponse.json(products);
+  const { page, pageSize, skip, limit } = getPagination(searchParams);
+  const [products, total] = await Promise.all([
+    Product.find(filters).skip(skip).limit(limit),
+    Product.countDocuments(filters)
+  ]);
+  return NextResponse.json({ data: products, total, page, pageSize });
 });

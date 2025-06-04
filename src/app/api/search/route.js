@@ -1,7 +1,7 @@
 //api/search/route.js
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
-import { withDB, getFiltersFromQuery } from '@/lib/api-utils';
+import { withDB, getFiltersFromQuery, getPagination } from '@/lib/api-utils';
 
 export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -49,6 +49,12 @@ export const GET = withDB(async (req) => {
     { $sort: { minPrice: 1 } },
   ];
 
+  const { page, pageSize, skip, limit } = getPagination(searchParams);
+  const totalRes = await Product.aggregate([...pipeline, { $count: 'count' }]);
+  const total = totalRes[0]?.count || 0;
+
+  pipeline.push({ $skip: skip }, { $limit: limit });
+
   const results = await Product.aggregate(pipeline);
-  return NextResponse.json(results);
+  return NextResponse.json({ data: results, total, page, pageSize });
 });
