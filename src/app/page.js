@@ -24,10 +24,12 @@ export default function HomePage() {
       .then((data) => {
         setSections(data);
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
     fetch('/api/categories')
       .then((res) => res.json())
-      .then((data) => setCategories(data));
+      .then((data) => setCategories(data))
+      .catch(() => {});
   }, []);
 
   const filteredSections = sections.map(section => ({
