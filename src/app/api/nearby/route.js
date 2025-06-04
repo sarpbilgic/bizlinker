@@ -3,7 +3,7 @@
 import Product from '@/models/Product';
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
-import { withDB } from '@/lib/api-utils';
+import { withDB, errorResponse } from '@/lib/api-utils';
 
 export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -13,7 +13,7 @@ export const GET = withDB(async (req) => {
   const maxDistance = parseFloat(searchParams.get('maxDistance')) || 50000; // metre
 
   if (isNaN(lat) || isNaN(lng)) {
-    return NextResponse.json({ error: 'lat ve lng parametreleri zorunludur.' }, { status: 400 });
+    return errorResponse('lat ve lng parametreleri zorunludur.', 400);
   }
 
   const nearbyBusinesses = await Business.aggregate([

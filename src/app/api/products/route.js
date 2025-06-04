@@ -2,7 +2,7 @@
 
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
-import { withDB, getFiltersFromQuery } from '@/lib/api-utils';
+import { withDB, getFiltersFromQuery, errorResponse } from '@/lib/api-utils';
 
 export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -10,9 +10,7 @@ export const GET = withDB(async (req) => {
   const id = searchParams.get('id');
   if (id) {
     const product = await Product.findById(id);
-    return product
-      ? NextResponse.json(product)
-      : NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    return product ? NextResponse.json(product) : errorResponse('Product not found', 404);
   }
 
   const filters = getFiltersFromQuery(searchParams);
