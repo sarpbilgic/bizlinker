@@ -1,12 +1,11 @@
 // GET /api/filters
 // Açıklama: Tüm filtre verilerini (kategori hiyerarşisi, markalar, özellikler) tek JSON içinde döner.
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET() {
-  await connectDB();
+export const GET = withDB(async () => {
 
   // ✅ Kategori Hiyerarşisi
   const categoryPipeline = [
@@ -88,4 +87,4 @@ export async function GET() {
     brands,
     features
   });
-}
+});

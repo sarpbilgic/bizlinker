@@ -1,9 +1,8 @@
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET(_, { params }) {
-  await connectDB();
+export const GET = withDB(async (_, { params }) => {
   const { slug } = params;
 
   if (!slug) {
@@ -12,4 +11,4 @@ export async function GET(_, { params }) {
 
   const products = await Product.find({ category_slug: slug }).sort({ price: 1 });
   return NextResponse.json(products);
-}
+});

@@ -1,12 +1,11 @@
 // GET /api/recommendations?query=iphone&lat=35.1&lng=33.9
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET(req) {
-  await connectDB();
+export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
 
   const q = searchParams.get('query') || '';
@@ -38,4 +37,4 @@ export async function GET(req) {
     .select('group_title group_slug brand category_item price productUrl image');
 
   return NextResponse.json(products);
-}
+});

@@ -1,11 +1,10 @@
 // ✅ /api/meta/route.js
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET() {
-  await connectDB();
+export const GET = withDB(async () => {
 
   const [brands, features, categories] = await Promise.all([
     Product.distinct('brand', { brand: { $ne: null } }),
@@ -38,4 +37,4 @@ export async function GET() {
   ]);
 
   return NextResponse.json({ brands, features, categories });
-}
+});

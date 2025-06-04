@@ -1,9 +1,8 @@
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET() {
-  await connectDB();
+export const GET = withDB(async () => {
 
   const categories = await Product.aggregate([
     {
@@ -27,4 +26,4 @@ export async function GET() {
   ]);
 
   return Response.json(categories);
-}
+});

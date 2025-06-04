@@ -1,12 +1,11 @@
 // GET /api/nearby?lat=35.1&lng=33.9&radius=30
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET(req) {
-  await connectDB();
+export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
 
   const lat = parseFloat(searchParams.get('lat'));
@@ -47,4 +46,4 @@ export async function GET(req) {
   }));
 
   return NextResponse.json(result);
-}
+});

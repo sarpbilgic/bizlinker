@@ -1,11 +1,10 @@
 // src/app/api/stats/route.js
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET() {
-  await connectDB();
+export const GET = withDB(async () => {
 
   const [totalProducts, uniqueGroups, businesses, brands] = await Promise.all([
     Product.countDocuments(),
@@ -20,4 +19,4 @@ export async function GET() {
     businessCount: businesses.length,
     brandCount: brands.length
   });
-}
+});

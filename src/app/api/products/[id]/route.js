@@ -1,11 +1,10 @@
 // src/app/api/products/[id]/route.js
 
-import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
+import { withDB } from '@/lib/api-utils';
 
-export async function GET(_, { params }) {
-  await connectDB();
+export const GET = withDB(async (_, { params }) => {
   const { id } = params;
 
   try {
@@ -19,4 +18,4 @@ export async function GET(_, { params }) {
   } catch (err) {
     return NextResponse.json({ error: 'Geçersiz ID veya sunucu hatası.' }, { status: 400 });
   }
-}
+});
