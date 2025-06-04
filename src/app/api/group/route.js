@@ -5,8 +5,13 @@ import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
 import { withDB } from '@/lib/api-utils';
 import { formatGroup } from '@/lib/group';
+import { authenticate } from '@/middleware/auth';
 
 export const GET = withDB(async (req) => {
+  const user = authenticate(req);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const { searchParams } = new URL(req.url);
   const slug = searchParams.get('slug');
   const id = searchParams.get('id');
