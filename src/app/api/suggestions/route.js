@@ -1,4 +1,4 @@
-// src/app/api/suggestions/route.js
+// ✅ /api/suggestions/route.js
 
 import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
@@ -7,43 +7,14 @@ import { NextResponse } from 'next/server';
 export async function GET(req) {
   await connectDB();
   const { searchParams } = new URL(req.url);
-  const query = searchParams.get('q');
+  const q = searchParams.get('q');
 
-  if (!query) {
-    // Query yoksa popüler markalar, grup başlıkları ve ana kategorileri öner
-    const [popularBrands, popularGroups, popularCategories] = await Promise.all([
-      Product.aggregate([
-        { $match: { brand: { $ne: null } } },
-        { $group: { _id: '$brand', count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
-        { $limit: 5 },
-        { $project: { _id: 0, type: 'brand', value: '$_id' } }
-      ]),
-      Product.aggregate([
-        { $match: { group_title: { $ne: null } } },
-        { $group: { _id: '$group_title', count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
-        { $limit: 5 },
-        { $project: { _id: 0, type: 'group_title', value: '$_id' } }
-      ]),
-      Product.aggregate([
-        { $match: { main_category: { $ne: null } } },
-        { $group: { _id: '$main_category', count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
-        { $limit: 5 },
-        { $project: { _id: 0, type: 'main_category', value: '$_id' } }
-      ])
-    ]);
-
-    return NextResponse.json([
-      ...popularBrands,
-      ...popularGroups,
-      ...popularCategories
-    ]);
+  if (!q || q.trim() === '') {
+    return NextResponse.json({ suggestions: [] });
   }
 
-  // Arama query'si varsa normal filtreli arama
-  const regex = new RegExp(query, 'i');
+  const regex = new RegExp(q.trim(), 'i');
+
   const result = await Product.aggregate([
     {
       $match: {
@@ -52,7 +23,8 @@ export async function GET(req) {
           { brand: regex },
           { main_category: regex },
           { subcategory: regex },
-          { category_item: regex }
+          { category_item: regex },
+          { category_slug: regex }
         ]
       }
     },
@@ -63,11 +35,24 @@ export async function GET(req) {
         brand: 1,
         main_category: 1,
         subcategory: 1,
-        category_item: 1
+        category_item: 1,
+        category_slug: 1
       }
     },
-    { $limit: 10 }
+    { $limit: 20 }
   ]);
 
-  return NextResponse.json(result);
+  // 🔁 Öneri setleri oluştur
+  const unique = (arr) => [...new Set(arr.filter(Boolean))];
+
+  const suggestions = {
+    group_titles: unique(result.map(r => r.group_title)),
+    brands: unique(result.map(r => r.brand)),
+    main_categories: unique(result.map(r => r.main_category)),
+    subcategories: unique(result.map(r => r.subcategory)),
+    items: unique(result.map(r => r.category_item)),
+    category_slugs: unique(result.map(r => r.category_slug))
+  };
+
+  return NextResponse.json(suggestions);
 }

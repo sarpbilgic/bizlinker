@@ -14,7 +14,7 @@ const categories = [
   'bilgisayar',
   'gaming-urunler',
   'bilgisayar-parcalari',
-  'cevre-bilimleri',
+  'cevre-birimleri',
   'telefon',
   'ag-urunleri',
   'ses-sistemleri--kulaklar',

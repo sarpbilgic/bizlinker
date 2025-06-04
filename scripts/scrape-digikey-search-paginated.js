@@ -11,7 +11,7 @@ const SEARCH_QUERIES = [
   'bilgisayar',
   'ag-urunleri',
   'bilgisayar-parcalari',
-  'cevre-bilimleri',
+  'cevre-birimleri',
   'depolama-ürünleri',
   'oyuncu-ekipmanlari',
   'telefon',

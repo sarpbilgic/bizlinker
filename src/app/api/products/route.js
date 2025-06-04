@@ -1,23 +1,27 @@
-import { NextResponse } from 'next/server';
+// ✅ /api/products/route.js
+
 import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
+import { NextResponse } from 'next/server';
 
 export async function GET(req) {
   await connectDB();
   const { searchParams } = new URL(req.url);
-  const search = searchParams.get('search') || '';
 
-  let query = {};
-  if (search) {
-    query = {
-      $or: [
-        { name: { $regex: search, $options: 'i' } },
-        { group_title: { $regex: search, $options: 'i' } },
-        { brand: { $regex: search, $options: 'i' } }
-      ]
-    };
+  const id = searchParams.get('id');
+  if (id) {
+    const product = await Product.findById(id);
+    return product
+      ? NextResponse.json(product)
+      : NextResponse.json({ error: 'Product not found' }, { status: 404 });
   }
 
-  const products = await Product.find(query).limit(100);
+  const filters = {};
+  ['main_category', 'subcategory', 'category_item', 'brand', 'category_slug', 'group_slug'].forEach((key) => {
+    const val = searchParams.get(key);
+    if (val) filters[key] = val;
+  });
+
+  const products = await Product.find(filters).limit(100);
   return NextResponse.json(products);
-} 
+}
