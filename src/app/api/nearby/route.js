@@ -4,17 +4,29 @@ import Product from '@/models/Product';
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
 import { withDB, errorResponse } from '@/lib/api-utils';
+import { z } from 'zod';
 
 export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
+  const params = Object.fromEntries(searchParams.entries());
 
-  const lat = parseFloat(searchParams.get('lat'));
-  const lng = parseFloat(searchParams.get('lng'));
-  const maxDistance = parseFloat(searchParams.get('maxDistance')) || 50000; // metre
+  const schema = z.object({
+    lat: z.preprocess((v) => parseFloat(v), z.number().finite()),
+    lng: z.preprocess((v) => parseFloat(v), z.number().finite()),
+    maxDistance: z
+      .preprocess(
+        (v) => (v === '' || v === undefined ? undefined : parseFloat(v)),
+        z.number().finite()
+      )
+      .default(50000),
+  });
 
-  if (isNaN(lat) || isNaN(lng)) {
-    return errorResponse('lat ve lng parametreleri zorunludur.', 400);
+  const parsed = schema.safeParse(params);
+  if (!parsed.success) {
+    return errorResponse(parsed.error.errors, 400);
   }
+
+  const { lat, lng, maxDistance } = parsed.data;
 
   const nearbyBusinesses = await Business.aggregate([
     {
