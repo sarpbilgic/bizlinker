@@ -33,6 +33,10 @@ export function getFiltersFromQuery(searchParams) {
 import { connectDB } from './mongodb';
 import { NextResponse } from 'next/server';
 
+export function errorResponse(error, status = 500) {
+  return NextResponse.json({ error }, { status });
+}
+
 export function withDB(handler) {
   return async (...args) => {
     try {
@@ -40,7 +44,7 @@ export function withDB(handler) {
       return await handler(...args);
     } catch (err) {
       console.error(err);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+      return errorResponse('Internal server error', 500);
     }
   };
 }

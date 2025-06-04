@@ -1,7 +1,8 @@
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { withDB } from '@/lib/api-utils';
+import { withDB, errorResponse } from '@/lib/api-utils';
+import { NextResponse } from 'next/server';
 
 export const POST = withDB(async (req) => {
   try {
@@ -9,17 +10,17 @@ export const POST = withDB(async (req) => {
     const { email, password } = await req.json();
 
     if (!email || !password) {
-      return new Response(JSON.stringify({ error: 'Email and password required' }), { status: 400 });
+      return errorResponse('Email and password required', 400);
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
+      return errorResponse('User not found', 404);
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return new Response(JSON.stringify({ error: 'Invalid password' }), { status: 401 });
+      return errorResponse('Invalid password', 401);
     }
 
     if (!process.env.JWT_SECRET) {
@@ -32,13 +33,10 @@ export const POST = withDB(async (req) => {
       { expiresIn: '7d' }
     );
 
-    return new Response(JSON.stringify({ token }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json({ token });
 
   } catch (err) {
     console.error('LOGIN ERROR:', err);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+    return errorResponse('Internal server error', 500);
   }
 });

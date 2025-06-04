@@ -2,14 +2,14 @@
 
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
-import { withDB } from '@/lib/api-utils';
+import { withDB, errorResponse } from '@/lib/api-utils';
 
 export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
   const slug = searchParams.get('group_slug');
 
   if (!slug) {
-    return NextResponse.json({ error: 'group_slug gerekli.' }, { status: 400 });
+    return errorResponse('group_slug gerekli.', 400);
   }
 
   const pipeline = [

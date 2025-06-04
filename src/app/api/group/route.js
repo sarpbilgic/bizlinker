@@ -3,7 +3,7 @@
 
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
-import { withDB } from '@/lib/api-utils';
+import { withDB, errorResponse } from '@/lib/api-utils';
 import { formatGroup } from '@/lib/group';
 
 export const GET = withDB(async (req) => {
@@ -14,12 +14,12 @@ export const GET = withDB(async (req) => {
 
   const query = slug ? { group_slug: slug } : id ? { group_id: id } : null;
   if (!query) {
-    return NextResponse.json({ error: 'slug veya id gerekli.' }, { status: 400 });
+    return errorResponse('slug veya id gerekli.', 400);
   }
 
   const products = await Product.find(query).sort({ price: 1 });
   if (!products.length) {
-    return NextResponse.json({ error: 'Ürün grubu bulunamadı.' }, { status: 404 });
+    return errorResponse('Ürün grubu bulunamadı.', 404);
   }
 
   const body = formatGroup(products);
