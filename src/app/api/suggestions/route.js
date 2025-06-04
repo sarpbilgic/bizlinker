@@ -1,4 +1,5 @@
-// ✅ /api/suggestions/route.js
+// src/app/api/suggestions/route.js
+// Arama kutusu için başlık, ürün adı ve marka bazlı öneriler döner.
 
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
@@ -15,42 +16,16 @@ export const GET = withDB(async (req) => {
   const regex = new RegExp(q.trim(), 'i');
 
   const result = await Product.aggregate([
-    {
-      $match: {
-        $or: [
-          { group_title: regex },
-          { brand: regex },
-          { main_category: regex },
-          { subcategory: regex },
-          { category_item: regex },
-          { category_slug: regex }
-        ]
-      }
-    },
-    {
-      $project: {
-        _id: 0,
-        group_title: 1,
-        brand: 1,
-        main_category: 1,
-        subcategory: 1,
-        category_item: 1,
-        category_slug: 1
-      }
-    },
+    { $match: { $or: [ { group_title: regex }, { name: regex }, { brand: regex } ] } },
+    { $project: { _id: 0, group_title: 1, name: 1, brand: 1 } },
     { $limit: 20 }
   ]);
 
-  // 🔁 Öneri setleri oluştur
   const unique = (arr) => [...new Set(arr.filter(Boolean))];
-
   const suggestions = {
     group_titles: unique(result.map(r => r.group_title)),
-    brands: unique(result.map(r => r.brand)),
-    main_categories: unique(result.map(r => r.main_category)),
-    subcategories: unique(result.map(r => r.subcategory)),
-    items: unique(result.map(r => r.category_item)),
-    category_slugs: unique(result.map(r => r.category_slug))
+    product_names: unique(result.map(r => r.name)),
+    brands: unique(result.map(r => r.brand))
   };
 
   return NextResponse.json(suggestions);
