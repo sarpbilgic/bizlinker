@@ -20,7 +20,10 @@ export default function SearchPage() {
     if (!query) return;
     setLoading(true);
     fetch(`/api/search?query=${encodeURIComponent(query)}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Search request failed');
+        return res.json();
+      })
       .then(data => {
         setResults(data);
         setLoading(false);

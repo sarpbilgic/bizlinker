@@ -31,17 +31,22 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Invalid credentials');
+      }
+
       const data = await res.json();
-      
+
       if (data.token) {
         localStorage.setItem('token', data.token);
         router.push('/');
       } else {
         setError('Geçersiz email veya şifre');
       }
-    } catch {
-      setError('Giriş yapılırken bir hata oluştu');
+    } catch (err) {
+      setError(err.message || 'Giriş yapılırken bir hata oluştu');
     } finally {
       setLoading(false);
     }
