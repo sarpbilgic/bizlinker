@@ -4,6 +4,7 @@
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
 import { withDB, errorResponse } from '@/lib/api-utils';
+import { z } from 'zod';
 import { formatGroup } from '@/lib/group';
 import { authenticate } from '@/middleware/auth';
 
@@ -13,14 +14,25 @@ export const GET = withDB(async (req) => {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const { searchParams } = new URL(req.url);
-  const slug = searchParams.get('slug');
-  const id = searchParams.get('id');
-  const includeRelated = searchParams.get('includeRelated') === 'true';
+  const params = Object.fromEntries(searchParams.entries());
 
-  const query = slug ? { group_slug: slug } : id ? { group_id: id } : null;
-  if (!query) {
-    return errorResponse('slug veya id gerekli.', 400);
+  const schema = z
+    .object({
+      slug: z.string().optional(),
+      id: z.string().optional(),
+      includeRelated: z
+        .preprocess((v) => (v === undefined ? undefined : v === 'true'), z.boolean())
+        .optional(),
+    })
+    .refine((d) => d.slug || d.id, { message: 'slug veya id gerekli.' });
+
+  const parsed = schema.safeParse(params);
+  if (!parsed.success) {
+    return errorResponse(parsed.error.errors, 400);
   }
+  const { slug, id, includeRelated = false } = parsed.data;
+
+  const query = slug ? { group_slug: slug } : { group_id: id };
 
   const products = await Product.find(query).sort({ price: 1 });
   if (!products.length) {
