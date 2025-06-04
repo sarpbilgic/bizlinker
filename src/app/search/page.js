@@ -19,12 +19,13 @@ export default function SearchPage() {
   useEffect(() => {
     if (!query) return;
     setLoading(true);
-    fetch(`/api/products?search=${encodeURIComponent(query)}`)
+    fetch(`/api/search?query=${encodeURIComponent(query)}`)
       .then(res => res.json())
       .then(data => {
         setResults(data);
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
   }, [query]);
 
   // Sadece belirli firmalar

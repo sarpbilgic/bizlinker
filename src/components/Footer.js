@@ -5,9 +5,10 @@ export default function Footer() {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    fetch('/api/business/categories')
+    fetch('/api/categories')
       .then((res) => res.json())
-      .then((data) => setCategories(data));
+      .then((data) => setCategories(data))
+      .catch(err => console.error('Failed to load footer categories', err));
   }, []);
 
   return (

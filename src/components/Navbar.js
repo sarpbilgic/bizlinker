@@ -25,9 +25,10 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    fetch('/api/categories/menu')
+    fetch('/api/categories?type=menu')
       .then(res => res.json())
-      .then(data => setMenu(data));
+      .then(data => setMenu(data))
+      .catch(err => console.error('Failed to load categories menu', err));
   }, []);
 
   useEffect(() => {

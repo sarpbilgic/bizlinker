@@ -21,7 +21,8 @@ export default function CategoriesPage() {
       .then((data) => {
         setCategories(data);
         setLoading(false);
-      });
+      })
+      .catch(() => setLoading(false));
   }, []);
 
   const getCategoryIcon = (categoryName) => {
