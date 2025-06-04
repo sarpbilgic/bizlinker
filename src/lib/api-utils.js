@@ -48,3 +48,12 @@ export function withDB(handler) {
     }
   };
 }
+
+export function getPagination(searchParams, defaultPageSize = 20, maxPageSize = 100) {
+  const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
+  let pageSize = parseInt(searchParams.get('pageSize') || defaultPageSize, 10);
+  if (isNaN(pageSize) || pageSize <= 0) pageSize = defaultPageSize;
+  if (pageSize > maxPageSize) pageSize = maxPageSize;
+  const skip = (page - 1) * pageSize;
+  return { page, pageSize, skip, limit: pageSize };
+}

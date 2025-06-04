@@ -2,7 +2,7 @@
 
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
-import { withDB } from '@/lib/api-utils';
+import { withDB, getPagination } from '@/lib/api-utils';
 import { authenticate } from '@/middleware/auth';
 
 export const GET = withDB(async (req) => {
@@ -11,13 +11,14 @@ export const GET = withDB(async (req) => {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const { searchParams } = new URL(req.url);
+  const { page, pageSize, skip, limit } = getPagination(searchParams);
 
   const lat = parseFloat(searchParams.get('lat'));
   const lng = parseFloat(searchParams.get('lng'));
   const radius = parseFloat(searchParams.get('radius')) || 30;
 
   if (!isNaN(lat) && !isNaN(lng)) {
-    const businesses = await Business.aggregate([
+    const base = [
       {
         $geoNear: {
           near: { type: 'Point', coordinates: [lng, lat] },
@@ -25,7 +26,14 @@ export const GET = withDB(async (req) => {
           spherical: true,
           maxDistance: radius * 1000,
         }
-      },
+      }
+    ];
+
+    const totalRes = await Business.aggregate([...base, { $count: 'count' }]);
+    const total = totalRes[0]?.count || 0;
+
+    const businesses = await Business.aggregate([
+      ...base,
       {
         $project: {
           _id: 0,
@@ -34,16 +42,21 @@ export const GET = withDB(async (req) => {
           distance: 1,
           coordinates: '$location.coordinates'
         }
-      }
+      },
+      { $skip: skip },
+      { $limit: limit }
     ]);
-    return NextResponse.json(businesses);
+    return NextResponse.json({ data: businesses, total, page, pageSize });
   }
 
-  const all = await Business.find({}, { _id: 0, name: 1, website: 1, 'location.coordinates': 1 });
+  const [all, total] = await Promise.all([
+    Business.find({}, { _id: 0, name: 1, website: 1, 'location.coordinates': 1 }).skip(skip).limit(limit),
+    Business.countDocuments()
+  ]);
   const mapped = all.map(b => ({
     name: b.name,
     website: b.website,
     coordinates: b.location.coordinates
   }));
-  return NextResponse.json(mapped);
+  return NextResponse.json({ data: mapped, total, page, pageSize });
 });
