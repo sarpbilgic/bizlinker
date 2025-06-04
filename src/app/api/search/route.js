@@ -1,15 +1,31 @@
 //api/search/route.js
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
-import { withDB, getFiltersFromQuery, getPagination } from '@/lib/api-utils';
+import { withDB, getFiltersFromQuery, getPagination, errorResponse } from '@/lib/api-utils';
+import { z } from 'zod';
 
 export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
 
-  const query = searchParams.get('query')?.toLowerCase();
+  const params = Object.fromEntries(searchParams.entries());
+
+  const schema = z.object({
+    query: z.string().trim().optional(),
+    min: z
+      .preprocess(v => (v === undefined || v === '' ? undefined : parseFloat(v)), z.number().min(0))
+      .optional(),
+    max: z
+      .preprocess(v => (v === undefined || v === '' ? undefined : parseFloat(v)), z.number().min(0))
+      .optional(),
+  });
+
+  const parsed = schema.safeParse(params);
+  if (!parsed.success) {
+    return errorResponse(parsed.error.errors, 400);
+  }
+
+  const { query, min = 0, max = 999999 } = parsed.data;
   const filters = getFiltersFromQuery(searchParams);
-  const min = parseFloat(searchParams.get('min')) || 0;
-  const max = parseFloat(searchParams.get('max')) || 999999;
 
   const match = {
     price: { $gte: min, $lte: max },
