@@ -27,12 +27,18 @@ export const GET = withDB(async (req) => {
           name: 1,
           website: 1,
           distance: 1,
+          coordinates: '$location.coordinates'
         }
       }
     ]);
     return NextResponse.json(businesses);
   }
 
-  const all = await Business.find({}, { _id: 0, name: 1, website: 1 });
-  return NextResponse.json(all);
+  const all = await Business.find({}, { _id: 0, name: 1, website: 1, 'location.coordinates': 1 });
+  const mapped = all.map(b => ({
+    name: b.name,
+    website: b.website,
+    coordinates: b.location.coordinates
+  }));
+  return NextResponse.json(mapped);
 });
