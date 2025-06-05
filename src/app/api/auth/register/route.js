@@ -1,3 +1,6 @@
+// ✅ Yeni kullanıcı kaydı API'si — email, şifre ve userType ile kayıt.
+// Frontend'deki register formundan çağrılır.
+
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
@@ -6,7 +9,6 @@ import { NextResponse } from 'next/server';
 
 export const POST = withDB(async (req) => {
   try {
-
     const body = await req.json();
 
     const schema = z.object({
@@ -36,8 +38,8 @@ export const POST = withDB(async (req) => {
     });
 
     return NextResponse.json({ message: 'User created' }, { status: 201 });
-  } catch (error) {
-    console.error('REGISTER ERROR:', error);
-    return errorResponse('Internal server error', 500);
+  } catch (err) {
+    console.error('REGISTER ERROR', err);
+    return errorResponse('Internal Server Error', 500);
   }
 });

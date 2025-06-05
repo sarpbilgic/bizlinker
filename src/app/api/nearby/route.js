@@ -1,4 +1,6 @@
-// GET /api/nearby?lat=35.1&lng=33.9&maxDistance=30000
+// ✅ Frontend'de Kullanım Yeri:
+// Kullanıcının konumuna göre en yakın işletmelerde satılan ürünleri göstermek için kullanılır.
+// Örnek: Anasayfada "yakındakiler", harita entegreli listeleme vs.
 
 import Product from '@/models/Product';
 import Business from '@/models/Business';
@@ -11,14 +13,12 @@ export const GET = withDB(async (req) => {
   const { page, pageSize, skip, limit } = getPagination(searchParams);
   const params = Object.fromEntries(searchParams.entries());
 
+  // Konum parametrelerini kontrol et
   const schema = z.object({
     lat: z.preprocess((v) => parseFloat(v), z.number().finite()),
     lng: z.preprocess((v) => parseFloat(v), z.number().finite()),
     maxDistance: z
-      .preprocess(
-        (v) => (v === '' || v === undefined ? undefined : parseFloat(v)),
-        z.number().finite()
-      )
+      .preprocess((v) => (v === '' || v === undefined ? undefined : parseFloat(v)), z.number().finite())
       .default(50000),
   });
 
@@ -29,6 +29,7 @@ export const GET = withDB(async (req) => {
 
   const { lat, lng, maxDistance } = parsed.data;
 
+  // Yakındaki işletmeleri bul
   const nearbyBusinesses = await Business.aggregate([
     {
       $geoNear: {
@@ -50,16 +51,45 @@ export const GET = withDB(async (req) => {
   const businessIds = nearbyBusinesses.map(b => b._id);
   const businessDistances = Object.fromEntries(nearbyBusinesses.map(b => [b._id.toString(), b.distance]));
 
-  const [products, total] = await Promise.all([
-    Product.find({ business: { $in: businessIds } }).skip(skip).limit(limit).lean(),
-    Product.countDocuments({ business: { $in: businessIds } })
+  // Bu işletmelere ait ürünleri getir
+  const products = await Product.aggregate([
+    { $match: { businessId: { $in: businessIds } } },
+    {
+      $group: {
+        _id: '$group_id',
+        group_title: { $first: '$group_title' },
+        group_slug: { $first: '$group_slug' },
+        image: { $first: '$image' },
+        minPrice: { $min: '$price' },
+        businesses: {
+          $push: {
+            businessName: '$businessName',
+            businessId: '$businessId',
+            price: '$price',
+            productUrl: '$productUrl'
+          }
+        }
+      }
+    },
+    { $skip: skip },
+    { $limit: limit }
   ]);
 
-  // Mesafe ekle
-  const result = products.map(p => ({
-    ...p,
-    distance_km: (businessDistances[p.business?.toString()] / 1000).toFixed(2),
+  // İşletme mesafelerini sonuçlara ekle
+  const result = products.map(group => ({
+    ...group,
+    businesses: group.businesses.map(b => ({
+      ...b,
+      distance: businessDistances[b.businessId?.toString()] || null
+    }))
   }));
 
-  return NextResponse.json({ data: result, total, page, pageSize });
+  return NextResponse.json({
+    data: result,
+    pagination: {
+      page,
+      pageSize,
+      total: result.length
+    }
+  });
 });

@@ -1,4 +1,6 @@
-// GET /api/businesses?lat=...&lng=...&radius=...
+// ✅ Frontend'de Kullanım Yeri:
+// Kullanıcının konumuna yakın firmaları listelemek ve filtreleme yapmak için kullanılır.
+// Örnek: "yakındaki firmalar", harita destekli firma listesi veya firma profilleri sayfasında.
 
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
@@ -10,13 +12,15 @@ export const GET = withDB(async (req) => {
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
   const { searchParams } = new URL(req.url);
   const { page, pageSize, skip, limit } = getPagination(searchParams);
 
   const lat = parseFloat(searchParams.get('lat'));
   const lng = parseFloat(searchParams.get('lng'));
-  const radius = parseFloat(searchParams.get('radius')) || 30;
+  const radius = parseFloat(searchParams.get('radius')) || 30; // kilometre cinsinden
 
+  // Eğer konum verildiyse, yakın firmaları getir
   if (!isNaN(lat) && !isNaN(lng)) {
     const base = [
       {
@@ -24,7 +28,7 @@ export const GET = withDB(async (req) => {
           near: { type: 'Point', coordinates: [lng, lat] },
           distanceField: 'distance',
           spherical: true,
-          maxDistance: radius * 1000,
+          maxDistance: radius * 1000, // metre
         }
       }
     ];
@@ -46,17 +50,15 @@ export const GET = withDB(async (req) => {
       { $skip: skip },
       { $limit: limit }
     ]);
+
     return NextResponse.json({ data: businesses, total, page, pageSize });
   }
 
+  // Eğer konum verilmemişse tüm firmaları getir
   const [all, total] = await Promise.all([
-    Business.find({}, { _id: 0, name: 1, website: 1, 'location.coordinates': 1 }).skip(skip).limit(limit),
+    Business.find().skip(skip).limit(limit).select('name website location'),
     Business.countDocuments()
   ]);
-  const mapped = all.map(b => ({
-    name: b.name,
-    website: b.website,
-    coordinates: b.location.coordinates
-  }));
-  return NextResponse.json({ data: mapped, total, page, pageSize });
+
+  return NextResponse.json({ data: all, total, page, pageSize });
 });

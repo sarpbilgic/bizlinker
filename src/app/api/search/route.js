@@ -1,4 +1,7 @@
-//api/search/route.js
+// ✅ Frontend'de Kullanım Yeri:
+// Arama sayfası veya herhangi bir kategori altından yapılan ürün aramalarında kullanılır.
+// Filtreleme (fiyat, kategori, alt kategori, marka, firma, slug) ve metin bazlı arama sağlar.
+
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
 import { withDB, getFiltersFromQuery, getPagination, errorResponse } from '@/lib/api-utils';
@@ -6,9 +9,9 @@ import { z } from 'zod';
 
 export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
-
   const params = Object.fromEntries(searchParams.entries());
 
+  // Arama parametrelerinin doğrulaması
   const schema = z.object({
     query: z.string().trim().optional(),
     min: z
@@ -29,9 +32,10 @@ export const GET = withDB(async (req) => {
 
   const match = {
     price: { $gte: min, $lte: max },
+    ...filters
   };
 
-  Object.assign(match, filters);
+  // Eğer metin araması yapılmışsa, farklı alanlarda regex uygula
   if (query) {
     match.$or = [
       { name: { $regex: query, $options: 'i' } },
@@ -49,28 +53,40 @@ export const GET = withDB(async (req) => {
         group_title: { $first: '$group_title' },
         group_slug: { $first: '$group_slug' },
         image: { $first: '$image' },
+        brands: { $addToSet: '$brand' },
         minPrice: { $min: '$price' },
         maxPrice: { $max: '$price' },
-        brands: { $addToSet: '$brand' },
         count: { $sum: 1 },
         businesses: {
           $push: {
             businessName: '$businessName',
             price: '$price',
-            productUrl: '$productUrl',
-          },
-        },
-      },
-    },
-    { $sort: { minPrice: 1 } },
+            productUrl: '$productUrl'
+          }
+        }
+      }
+    }
   ];
 
   const { page, pageSize, skip, limit } = getPagination(searchParams);
   const totalRes = await Product.aggregate([...pipeline, { $count: 'count' }]);
   const total = totalRes[0]?.count || 0;
 
-  pipeline.push({ $skip: skip }, { $limit: limit });
+  pipeline.push(
+    { $sort: { minPrice: 1 } },
+    { $skip: skip },
+    { $limit: limit }
+  );
 
   const results = await Product.aggregate(pipeline);
-  return NextResponse.json({ data: results, total, page, pageSize });
+
+  return NextResponse.json({
+    data: results,
+    pagination: {
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+      total
+    }
+  });
 });

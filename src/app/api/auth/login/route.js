@@ -1,3 +1,6 @@
+// ✅ Kullanıcı giriş API'si — token HTTP-only cookie olarak yazılır.
+// Frontend'de login formundan sonra çağrılır. Token cookie'de saklanır.
+
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -6,9 +9,7 @@ import { NextResponse } from 'next/server';
 
 export const POST = withDB(async (req) => {
   try {
-
     const { email, password } = await req.json();
-
     if (!email || !password) {
       return errorResponse('Email and password required', 400);
     }
@@ -33,10 +34,18 @@ export const POST = withDB(async (req) => {
       { expiresIn: '7d' }
     );
 
-    return NextResponse.json({ token });
+    const res = NextResponse.json({ success: true });
+    res.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60,
+      path: "/"
+    });
 
+    return res;
   } catch (err) {
-    console.error('LOGIN ERROR:', err);
-    return errorResponse('Internal server error', 500);
+    console.error('LOGIN ERROR', err);
+    return errorResponse('Internal Server Error', 500);
   }
 });

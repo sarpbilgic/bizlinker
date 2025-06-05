@@ -1,5 +1,6 @@
-// src/app/api/group/route.js
-// Belirtilen slug veya id ile ürün grubunu döner, isteğe bağlı benzer grupları ekler.
+// ✅ Frontend'de Kullanım Yeri:
+// Bir ürün grubuna tıklandığında detay sayfasında o gruba ait tüm ürünlerin ve firmaların gösterilmesi için kullanılır.
+// Örnek: /group/macbook-pro-14 → tüm satıcılar, fiyatlar, detaylar gösterilir.
 
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
@@ -9,13 +10,16 @@ import { formatGroup } from '@/lib/group';
 import { authenticate } from '@/middleware/auth';
 
 export const GET = withDB(async (req) => {
+  // Opsiyonel: kullanıcı kontrolü
   const user = authenticate(req);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
   const { searchParams } = new URL(req.url);
   const params = Object.fromEntries(searchParams.entries());
 
+  // slug veya id zorunlu
   const schema = z
     .object({
       slug: z.string().optional(),
@@ -30,10 +34,11 @@ export const GET = withDB(async (req) => {
   if (!parsed.success) {
     return errorResponse(parsed.error.errors, 400);
   }
-  const { slug, id, includeRelated = false } = parsed.data;
 
+  const { slug, id, includeRelated = false } = parsed.data;
   const query = slug ? { group_slug: slug } : { group_id: id };
 
+  // İlgili ürün grubundaki tüm ürünleri çek
   const products = await Product.find(query).sort({ price: 1 });
   if (!products.length) {
     return errorResponse('Ürün grubu bulunamadı.', 404);
@@ -41,10 +46,11 @@ export const GET = withDB(async (req) => {
 
   const body = formatGroup(products);
 
+  // Benzer grupları da ekle (ürün başlığından tahmini olarak)
   if (includeRelated) {
-    const regex = new RegExp(body.group_title.split(' ').slice(0, 3).join('|'), 'i');
+    const regex = new RegExp(body.group_title.split(' ').slice(0, 2).join('|'), 'i');
     const related = await Product.aggregate([
-      { $match: { group_title: { $regex: regex }, group_slug: { $ne: body.group_slug } } },
+      { $match: { group_title: { $regex: regex }, group_slug: { $ne: slug } } },
       {
         $group: {
           _id: '$group_id',
@@ -52,12 +58,11 @@ export const GET = withDB(async (req) => {
           group_slug: { $first: '$group_slug' },
           image: { $first: '$image' },
           minPrice: { $min: '$price' },
-          count: { $sum: 1 }
         }
       },
-      { $limit: 10 }
+      { $limit: 5 }
     ]);
-    body.related_groups = related;
+    body.related = related;
   }
 
   return NextResponse.json(body);

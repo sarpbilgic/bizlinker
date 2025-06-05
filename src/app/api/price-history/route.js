@@ -1,4 +1,6 @@
-// GET /api/price-history?group_slug=...
+// ✅ Frontend'de Kullanım Yeri:
+// Bir ürün detay sayfasında (örnek: MacBook Pro) geçmiş fiyat değişim grafiği göstermek için kullanılır.
+// /group/:slug sayfasında fiyat trendi çizimi (örneğin: Chart.js ile) için uygundur.
 
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
@@ -12,16 +14,24 @@ export const GET = withDB(async (req) => {
     return errorResponse('group_slug gerekli.', 400);
   }
 
+  // Belirtilen gruba ait tüm ürünlerin fiyat geçmişini gruplandır
   const pipeline = [
     { $match: { group_slug: slug } },
+
+    // Tarih ve firma bazında fiyat özetleri
     {
       $group: {
-        _id: { business: '$businessName', date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } } },
+        _id: {
+          business: '$businessName',
+          date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
+        },
         minPrice: { $min: '$price' },
         maxPrice: { $max: '$price' },
         avgPrice: { $avg: '$price' }
       }
     },
+
+    // Her firma için günlük fiyat geçmişi oluştur
     {
       $group: {
         _id: '$_id.business',
@@ -35,6 +45,7 @@ export const GET = withDB(async (req) => {
         }
       }
     },
+
     {
       $project: {
         _id: 0,
