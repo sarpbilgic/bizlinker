@@ -27,13 +27,15 @@ export default function CategoryPage() {
     if (!categorySlug) return;
     
     setLoading(true);
-    fetch(`/api/category/${categorySlug}`)
+    fetch(`/api/grouped-products?category_slug=${encodeURIComponent(categorySlug)}`)
       .then(res => {
         if (!res.ok) throw new Error('Category fetch failed');
         return res.json();
       })
-      .then(data => {
-        setProducts(Array.isArray(data) ? data : []);
+      .then(body => {
+        const data = Array.isArray(body.data) ? body.data : [];
+        // data alanı varsa kullan, yoksa doğrudan gelen değeri kullan
+        setProducts(data.length ? data : Array.isArray(body) ? body : []);
         setLoading(false);
       })
       .catch(() => {
@@ -105,7 +107,7 @@ export default function CategoryPage() {
               Bu Kategoride Ürün Bulunamadı
             </h3>
             <p className="text-gray-500 dark:text-gray-500 text-lg mb-6">
-              "{categoryTitle}" kategorisinde henüz ürün bulunmamaktadır.
+              {categoryTitle} kategorisinde henüz ürün bulunmamaktadır.
             </p>
             <Link
               href="/categories"

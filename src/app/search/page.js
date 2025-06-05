@@ -77,7 +77,7 @@ export default function SearchPage() {
             </div>
             
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              "<span className="text-orange-600">{query}</span>" için
+              <span className="text-orange-600">{query}</span> için
               <br />
               <span className="text-2xl md:text-3xl bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
                 Firma Karşılaştırma
@@ -107,7 +107,7 @@ export default function SearchPage() {
               Sonuç Bulunamadı
             </h3>
             <p className="text-gray-500 dark:text-gray-500 text-lg mb-6">
-              "{query}" için belirlediğimiz firmalarda ürün bulunamadı
+              {query} için belirlediğimiz firmalarda ürün bulunamadı
             </p>
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 max-w-md mx-auto">
               <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">İpucu:</h4>

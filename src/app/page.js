@@ -15,6 +15,7 @@ import {
 export default function HomePage() {
   const [sections, setSections] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
@@ -35,6 +36,11 @@ export default function HomePage() {
         return res.json();
       })
       .then((data) => setCategories(data))
+      .catch(() => {});
+
+    fetch('/api/stats')
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => setStats(data))
       .catch(() => {});
   }, []);
 
@@ -111,16 +117,16 @@ export default function HomePage() {
           {/* Quick stats */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-xl mx-auto">
             <div className="bg-white/60 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="text-2xl font-bold text-orange-600">3</div>
+              <div className="text-2xl font-bold text-orange-600">{stats?.businessCount ?? '-'}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Firma</div>
             </div>
             <div className="bg-white/60 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <div className="text-2xl font-bold text-blue-600">1000+</div>
+              <div className="text-2xl font-bold text-blue-600">{stats?.totalProducts ?? '-'}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Ürün</div>
             </div>
             <div className="bg-white/60 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/20 col-span-2 md:col-span-1">
-              <div className="text-2xl font-bold text-green-600">%50</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Tasarruf</div>
+              <div className="text-2xl font-bold text-green-600">{stats ? `%${stats.brandCount}` : '-'}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Marka</div>
             </div>
           </div>
         </div>

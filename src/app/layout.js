@@ -1,5 +1,6 @@
 import { AuthProvider } from '@/context/AuthContext';
 import Navbar from '@components/Navbar';
+import Link from 'next/link';
 import '@app/globals.css';
 
 export const metadata = {
@@ -47,10 +48,10 @@ export default function RootLayout({ children }) {
                   <div>
                     <h3 className="font-semibold text-white mb-4">Hızlı Linkler</h3>
                     <ul className="space-y-2 text-gray-300">
-                      <li><a href="/" className="hover:text-orange-400 transition-colors">Ana Sayfa</a></li>
-                      <li><a href="/categories" className="hover:text-orange-400 transition-colors">Kategoriler</a></li>
-                      <li><a href="/search?q=bilgisayar" className="hover:text-orange-400 transition-colors">Popüler Aramalar</a></li>
-                      <li><a href="/about" className="hover:text-orange-400 transition-colors">Hakkımızda</a></li>
+                      <li><Link href="/" className="hover:text-orange-400 transition-colors">Ana Sayfa</Link></li>
+                      <li><Link href="/categories" className="hover:text-orange-400 transition-colors">Kategoriler</Link></li>
+                      <li><Link href="/search?q=bilgisayar" className="hover:text-orange-400 transition-colors">Popüler Aramalar</Link></li>
+                      <li><Link href="/about" className="hover:text-orange-400 transition-colors">Hakkımızda</Link></li>
                     </ul>
                   </div>
 
@@ -58,10 +59,10 @@ export default function RootLayout({ children }) {
                   <div>
                     <h3 className="font-semibold text-white mb-4">Destek</h3>
                     <ul className="space-y-2 text-gray-300">
-                      <li><a href="/help" className="hover:text-orange-400 transition-colors">Yardım Merkezi</a></li>
-                      <li><a href="/contact" className="hover:text-orange-400 transition-colors">İletişim</a></li>
-                      <li><a href="/privacy" className="hover:text-orange-400 transition-colors">Gizlilik</a></li>
-                      <li><a href="/terms" className="hover:text-orange-400 transition-colors">Kullanım Şartları</a></li>
+                      <li><Link href="/help" className="hover:text-orange-400 transition-colors">Yardım Merkezi</Link></li>
+                      <li><Link href="/contact" className="hover:text-orange-400 transition-colors">İletişim</Link></li>
+                      <li><Link href="/privacy" className="hover:text-orange-400 transition-colors">Gizlilik</Link></li>
+                      <li><Link href="/terms" className="hover:text-orange-400 transition-colors">Kullanım Şartları</Link></li>
                     </ul>
                   </div>
                 </div>
@@ -72,7 +73,7 @@ export default function RootLayout({ children }) {
                     © {new Date().getFullYear()} BizLinker. Tüm hakları saklıdır.
                   </p>
                   <div className="flex items-center gap-4 mt-4 md:mt-0">
-                    <span className="text-gray-400 text-sm">Türkiye'nin fiyat karşılaştırma platformu</span>
+                    <span className="text-gray-400 text-sm">T&uuml;rkiye&apos;nin fiyat karşılaştırma platformu</span>
                   </div>
                 </div>
               </div>
