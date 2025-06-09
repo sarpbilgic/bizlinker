@@ -9,18 +9,24 @@ import { NextResponse } from 'next/server';
 export const POST = withDB(async (req) => {
   try {
     const { email, password } = await req.json();
+    console.log('Login attempt for email:', email);
+    
     if (!email || !password) {
       return errorResponse('Email and password required', 400);
     }
 
     const user = await User.findOne({ email });
+    console.log('User found:', user ? 'Yes' : 'No');
+    
     if (!user) {
-      return errorResponse('User not found', 404);
+      return errorResponse('Geçersiz email veya şifre', 401); // Generic error message
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log('Password match:', isMatch);
+    
     if (!isMatch) {
-      return errorResponse('Invalid password', 401);
+      return errorResponse('Geçersiz email veya şifre', 401); // Generic error message
     }
 
     if (!process.env.JWT_SECRET) {

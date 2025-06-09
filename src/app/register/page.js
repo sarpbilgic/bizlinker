@@ -68,7 +68,18 @@ export default function RegisterPage() {
       if (res.ok) {
         router.push('/login?message=Kayıt başarılı! Giriş yapabilirsiniz.');
       } else {
-        setError(data.error || 'Kayıt olurken bir hata oluştu');
+        // API hatalarını düzgün handle et
+        let errorMessage = 'Kayıt olurken bir hata oluştu';
+        if (data.error) {
+          if (typeof data.error === 'string') {
+            errorMessage = data.error;
+          } else if (Array.isArray(data.error)) {
+            errorMessage = data.error.map(err => err.message || err).join(', ');
+          } else if (data.error.message) {
+            errorMessage = data.error.message;
+          }
+        }
+        setError(errorMessage);
       }
     } catch (err) {
       setError(err.message || 'Kayıt olurken bir hata oluştu');

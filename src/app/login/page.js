@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 import { 
   UserIcon,
   EnvelopeIcon,
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,8 +41,13 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      if (data.token) {
-        localStorage.setItem('token', data.token);
+      // API başarılı response döndürdüyse giriş başarılı demektir
+      // Token cookie olarak set ediliyor, bu yüzden data.success kontrolü yapıyoruz
+      if (data.success) {
+        // AuthContext'e user bilgilerini kaydet
+        if (data.user) {
+          login(data.user);
+        }
         router.push('/');
       } else {
         setError('Geçersiz email veya şifre');

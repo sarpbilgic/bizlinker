@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
@@ -28,6 +28,7 @@ export default function Navbar() {
   const [search, setSearch] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
+  const searchRef = useRef(null);
 
   useEffect(() => {
     axios.get('/api/categories')
@@ -56,6 +57,20 @@ export default function Navbar() {
     }
   }, []);
 
+  // Click outside handler for suggestions
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setSuggestions([]);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const toggleDarkMode = () => {
     const newMode = !darkMode;
     setDarkMode(newMode);
@@ -66,6 +81,7 @@ export default function Navbar() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (search.trim()) {
+      setSuggestions([]); // Suggestions'ı temizle
       router.push(`/search?q=${encodeURIComponent(search.trim())}`);
     }
   };
@@ -88,7 +104,7 @@ export default function Navbar() {
               setTimeout(() => {
                 //setHoveredMain(null);
                 setCategoryOpen(false);
-              }, 200);
+              }, 500);
             }}
           >
             <button className="flex items-center gap-1 px-4 py-2 rounded-md bg-orange-500 text-white text-sm font-medium">
@@ -96,7 +112,16 @@ export default function Navbar() {
               <ChevronDownIcon className="w-4 h-4" />
             </button>
             {categoryOpen && (
-              <div className="absolute left-0 top-[48px] flex z-50 bg-white dark:bg-zinc-800 shadow-xl border rounded-xl min-w-[750px] overflow-hidden">
+              <div 
+                className="absolute left-0 top-[48px] flex z-50 bg-white dark:bg-zinc-800 shadow-xl border rounded-xl min-w-[750px] overflow-hidden"
+                onMouseEnter={() => setCategoryOpen(true)}
+                onMouseLeave={() => {
+                  setTimeout(() => {
+                    //setHoveredMain(null);
+                    setCategoryOpen(false);
+                  }, 300);
+                }}
+              >
                 <div className="w-64 border-r max-h-[400px] overflow-y-auto">
                   {Array.isArray(menu) && menu.map((cat, idx) => (
                     <div
@@ -130,13 +155,17 @@ export default function Navbar() {
             )}
           </div>
 
-          <div className="hidden md:flex flex-col relative w-1/2">
+          <div className="hidden md:flex flex-col relative w-1/2" ref={searchRef}>
             <form onSubmit={handleSearch} className="flex items-center w-full">
               <input
                 type="text"
                 placeholder="Search for a product, brand or category..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onBlur={() => {
+                  // Slight delay to allow clicks on suggestions
+                  setTimeout(() => setSuggestions([]), 150);
+                }}
                 className="w-full border rounded-lg py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-zinc-700 dark:text-white"
               />
               <button type="submit" className="-ml-8 text-gray-500 dark:text-white">
@@ -150,6 +179,7 @@ export default function Navbar() {
                     <button
                       onClick={() => {
                         setSearch(item);
+                        setSuggestions([]); // Suggestions'ı temizle
                         router.push(`/search?q=${encodeURIComponent(item)}`);
                       }}
                       className="w-full text-left px-4 py-2 text-sm hover:bg-orange-100 dark:hover:bg-orange-900 text-gray-700 dark:text-gray-200"
@@ -164,14 +194,18 @@ export default function Navbar() {
 
           <div className="relative hidden lg:block"
             onMouseEnter={() => setUserMenuOpen(true)}
-            onMouseLeave={() => setTimeout(() => setUserMenuOpen(false), 200)}
+            onMouseLeave={() => setTimeout(() => setUserMenuOpen(false), 500)}
           >
             <button className="flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800">
               <UserCircleIcon className="w-6 h-6 text-gray-600 dark:text-gray-200" />
               {user && <span className="text-gray-700 dark:text-white">{user.name || 'My Account'}</span>}
             </button>
             {userMenuOpen && (
-              <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border rounded-md shadow-lg">
+              <div 
+                className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border rounded-md shadow-lg"
+                onMouseEnter={() => setUserMenuOpen(true)}
+                onMouseLeave={() => setTimeout(() => setUserMenuOpen(false), 300)}
+              >
                 {user ? (
                   <>
                     <Link href="/profile" className="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-zinc-800">👤 Profile</Link>

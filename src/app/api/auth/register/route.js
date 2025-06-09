@@ -12,9 +12,10 @@ export const POST = withDB(async (req) => {
     const body = await req.json();
 
     const schema = z.object({
+      name: z.string().min(1, "Name is required"),
       email: z.string().email(),
       password: z.string().min(6),
-      userType: z.enum(['consumer', 'business']),
+      userType: z.enum(['consumer', 'business']).optional().default('consumer'),
     });
 
     const parsed = schema.safeParse(body);
@@ -22,16 +23,20 @@ export const POST = withDB(async (req) => {
       return errorResponse(parsed.error.errors, 400);
     }
 
-    const { email, password, userType } = parsed.data;
+    const { name, email, password, userType } = parsed.data;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return errorResponse('User already exists', 400);
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    console.log('Registering user with email:', email);
+    console.log('Salt rounds used:', saltRounds);
 
     await User.create({
+      name,
       email,
       password: hashedPassword,
       userType,
