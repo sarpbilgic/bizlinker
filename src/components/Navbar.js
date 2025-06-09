@@ -86,7 +86,7 @@ export default function Navbar() {
             onMouseEnter={() => setCategoryOpen(true)}
             onMouseLeave={() => {
               setTimeout(() => {
-                setHoveredMain(null);
+                //setHoveredMain(null);
                 setCategoryOpen(false);
               }, 200);
             }}

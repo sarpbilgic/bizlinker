@@ -144,7 +144,7 @@ export default function HomePage() {
               return (
                 <Link
                   key={slug || `category-${index}`}
-                  href={`/category/${slug}`}
+                  href={`/main-category/${slug}`}
                   className="group relative bg-white dark:bg-zinc-800 rounded-2xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-zinc-700 overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
