@@ -1,36 +1,40 @@
-// ✅ Frontend'de Kullanım Yeri:
-// Kullanıcının konumuna yakın firmaları listelemek ve filtreleme yapmak için kullanılır.
-// Örnek: "yakındaki firmalar", harita destekli firma listesi veya firma profilleri sayfasında.
+// ✅ src/app/api/businesses/route.js — Konuma göre yakın işletmeleri listeleme
 
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
-import { withDB, getPagination } from '@/lib/api-utils';
-import { authenticate } from '@/middleware/auth';
+import { withDB, getPagination, errorResponse } from '@/lib/api-utils';
+import { z } from 'zod';
 
 export const GET = withDB(async (req) => {
-  const user = authenticate(req);
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   const { searchParams } = new URL(req.url);
   const { page, pageSize, skip, limit } = getPagination(searchParams);
+  const params = Object.fromEntries(searchParams.entries());
 
-  const lat = parseFloat(searchParams.get('lat'));
-  const lng = parseFloat(searchParams.get('lng'));
-  const radius = parseFloat(searchParams.get('radius')) || 30; // kilometre cinsinden
+  const schema = z.object({
+    lat: z.preprocess((v) => parseFloat(v), z.number().finite().optional()),
+    lng: z.preprocess((v) => parseFloat(v), z.number().finite().optional()),
+    radius: z
+      .preprocess((v) => (v === '' || v === undefined ? undefined : parseFloat(v)), z.number().finite())
+      .default(30),
+  });
 
-  // Eğer konum verildiyse, yakın firmaları getir
-  if (!isNaN(lat) && !isNaN(lng)) {
+  const parsed = schema.safeParse(params);
+  if (!parsed.success) {
+    return errorResponse(parsed.error.errors, 400);
+  }
+
+  const { lat, lng, radius } = parsed.data;
+
+  if (lat !== undefined && lng !== undefined) {
     const base = [
       {
         $geoNear: {
           near: { type: 'Point', coordinates: [lng, lat] },
           distanceField: 'distance',
           spherical: true,
-          maxDistance: radius * 1000, // metre
-        }
-      }
+          maxDistance: radius * 1000,
+        },
+      },
     ];
 
     const totalRes = await Business.aggregate([...base, { $count: 'count' }]);
@@ -44,20 +48,19 @@ export const GET = withDB(async (req) => {
           name: 1,
           website: 1,
           distance: 1,
-          coordinates: '$location.coordinates'
-        }
+          coordinates: '$location.coordinates',
+        },
       },
       { $skip: skip },
-      { $limit: limit }
+      { $limit: limit },
     ]);
 
     return NextResponse.json({ data: businesses, total, page, pageSize });
   }
 
-  // Eğer konum verilmemişse tüm firmaları getir
   const [all, total] = await Promise.all([
     Business.find().skip(skip).limit(limit).select('name website location'),
-    Business.countDocuments()
+    Business.countDocuments(),
   ]);
 
   return NextResponse.json({ data: all, total, page, pageSize });

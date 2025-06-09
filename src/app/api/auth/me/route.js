@@ -1,21 +1,26 @@
-// ✅ Kullanıcı kimlik doğrulama API'si — cookie'deki token'a göre kullanıcı verisi döner.
-// Frontend'de Navbar'da kullanıcıyı göstermek için veya auth kontrolü için kullanılır.
+// ✅ src/app/api/auth/me/route.js
 
-import User from '@/models/User';
 import { NextResponse } from 'next/server';
-import { withDB, errorResponse } from '@/lib/api-utils';
 import { authenticate } from '@/middleware/auth';
+import { connectDB } from '@/lib/mongodb';
+import User from '@/models/User';
 
-export const GET = withDB(async (req) => {
-  const user = authenticate(req);
-  if (!user) {
-    return errorResponse('Unauthorized', 401);
+export async function GET(req) {
+  try {
+    await connectDB();
+    const userData = authenticate(req);
+    if (!userData) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const user = await User.findById(userData.id).select('-password');
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ user });
+  } catch (err) {
+    console.error('ME ERROR', err);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
-
-  const userData = await User.findById(user.id).select('-password');
-  if (!userData) {
-    return errorResponse('User not found', 404);
-  }
-
-  return NextResponse.json(userData);
-});
+}

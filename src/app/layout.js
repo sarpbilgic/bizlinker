@@ -2,6 +2,8 @@ import { AuthProvider } from '@/context/AuthContext';
 import Navbar from '@components/Navbar';
 import Link from 'next/link';
 import '@app/globals.css';
+import Providers from './providers';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export const metadata = {
   title: 'BizLinker - Fiyat Karşılaştırma Platformu',
@@ -16,7 +18,7 @@ export default function RootLayout({ children }) {
           <div className="flex flex-col min-h-screen">
             <Navbar />
             <main className="flex-1">
-              {children}
+              <Providers>{children}</Providers>
             </main>
             
             {/* Enhanced Footer */}

@@ -2,7 +2,50 @@
 // Ana kategori sayfalarında (örneğin: Bilgisayarlar) filtreli olarak ürün gruplarını göstermek için kullanılır.
 // Örnek: /category/bilgisayar → filtreye göre ürün gruplarını çeker.
 
+// ✅ src/app/api/grouped-products/route.js
+// Ürünleri gruplandırarak listeler (örneğin: aynı modelin farklı satıcıları)
+
 import Product from '@/models/Product';
+import { NextResponse } from 'next/server';
+import { withDB, getPagination, getFiltersFromQuery } from '@/lib/api-utils';
+import { formatGroup } from '@/lib/group';
+
+export const GET = withDB(async (req) => {
+  const { searchParams } = new URL(req.url);
+  const { skip, limit, page, pageSize } = getPagination(searchParams);
+  const filters = getFiltersFromQuery(searchParams);
+
+  const groups = await Product.aggregate([
+    { $match: filters },
+    { $sort: { price: 1 } },
+    { $group: {
+      _id: '$group_slug',
+      docs: { $push: '$$ROOT' }
+    }},
+    { $skip: skip },
+    { $limit: limit }
+  ]);
+
+  const formatted = groups.map(g => formatGroup(g.docs));
+
+  return NextResponse.json({
+    data: formatted,
+    pagination: {
+      page,
+      pageSize,
+      total: formatted.length,
+      totalPages: Math.ceil(formatted.length / pageSize)
+    }
+  });
+});
+
+
+
+
+
+
+
+/*import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
 import { withDB, getFiltersFromQuery, getPagination } from '@/lib/api-utils';
 
@@ -70,3 +113,4 @@ export const GET = withDB(async (req) => {
     }
   });
 });
+*/

@@ -1,60 +1,52 @@
-// ✅ Frontend'de Kullanım Yeri:
-// Bir ürün detay sayfasında (örnek: MacBook Pro) geçmiş fiyat değişim grafiği göstermek için kullanılır.
-// /group/:slug sayfasında fiyat trendi çizimi (örneğin: Chart.js ile) için uygundur.
-
 import Product from '@/models/Product';
 import { NextResponse } from 'next/server';
 import { withDB, errorResponse } from '@/lib/api-utils';
+import { z } from 'zod';
 
 export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
-  const slug = searchParams.get('group_slug');
+  const params = Object.fromEntries(searchParams.entries());
 
-  if (!slug) {
-    return errorResponse('group_slug gerekli.', 400);
+  // ✅ Sorgu validasyonu
+  const schema = z.object({
+    group_id: z.string().min(1),
+    businessName: z.string().optional(),
+    start: z.string().optional(), // ISO tarih
+    end: z.string().optional(),   // ISO tarih
+  });
+
+  const parsed = schema.safeParse(params);
+  if (!parsed.success) {
+    return errorResponse(parsed.error.errors, 400);
   }
 
-  // Belirtilen gruba ait tüm ürünlerin fiyat geçmişini gruplandır
-  const pipeline = [
-    { $match: { group_slug: slug } },
+  const { group_id, businessName, start, end } = parsed.data;
 
-    // Tarih ve firma bazında fiyat özetleri
-    {
-      $group: {
-        _id: {
-          business: '$businessName',
-          date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }
-        },
-        minPrice: { $min: '$price' },
-        maxPrice: { $max: '$price' },
-        avgPrice: { $avg: '$price' }
-      }
-    },
+  const match = {
+    group_id,
+  };
 
-    // Her firma için günlük fiyat geçmişi oluştur
-    {
-      $group: {
-        _id: '$_id.business',
-        history: {
-          $push: {
-            date: '$_id.date',
-            minPrice: '$minPrice',
-            maxPrice: '$maxPrice',
-            avgPrice: '$avgPrice'
-          }
-        }
-      }
-    },
+  if (businessName) {
+    match.businessName = businessName;
+  }
 
-    {
-      $project: {
-        _id: 0,
-        business: '$_id',
-        history: 1
-      }
-    }
-  ];
+  if (start || end) {
+    match.createdAt = {};
+    if (start) match.createdAt.$gte = new Date(start);
+    if (end) match.createdAt.$lte = new Date(end);
+  }
 
-  const result = await Product.aggregate(pipeline);
-  return NextResponse.json(result);
+  // ✅ Fiyat geçmişi sorgusu
+  const history = await Product.find(match)
+    .sort({ createdAt: 1 })
+    .select('price businessName createdAt -_id');
+
+  // ✅ Grafik için biçimlendirme
+  const formatted = history.map(entry => ({
+    price: entry.price,
+    businessName: entry.businessName,
+    date: entry.createdAt.toISOString().split('T')[0] // YYYY-MM-DD
+  }));
+
+  return NextResponse.json({ data: formatted });
 });

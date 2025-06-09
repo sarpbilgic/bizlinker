@@ -1,6 +1,4 @@
-// ✅ Frontend'de Kullanım Yeri:
-// Kullanıcının konumuna göre en yakın işletmelerde satılan ürünleri göstermek için kullanılır.
-// Örnek: Anasayfada "yakındakiler", harita entegreli listeleme vs.
+// ✅ src/app/api/nearby/route.js — Kullanıcının konumuna göre en yakın ürünleri listeleme
 
 import Product from '@/models/Product';
 import Business from '@/models/Business';
@@ -13,7 +11,6 @@ export const GET = withDB(async (req) => {
   const { page, pageSize, skip, limit } = getPagination(searchParams);
   const params = Object.fromEntries(searchParams.entries());
 
-  // Konum parametrelerini kontrol et
   const schema = z.object({
     lat: z.preprocess((v) => parseFloat(v), z.number().finite()),
     lng: z.preprocess((v) => parseFloat(v), z.number().finite()),
@@ -29,7 +26,6 @@ export const GET = withDB(async (req) => {
 
   const { lat, lng, maxDistance } = parsed.data;
 
-  // Yakındaki işletmeleri bul
   const nearbyBusinesses = await Business.aggregate([
     {
       $geoNear: {
@@ -49,9 +45,10 @@ export const GET = withDB(async (req) => {
   ]);
 
   const businessIds = nearbyBusinesses.map(b => b._id);
-  const businessDistances = Object.fromEntries(nearbyBusinesses.map(b => [b._id.toString(), b.distance]));
+  const businessDistances = Object.fromEntries(
+    nearbyBusinesses.map(b => [b._id.toString(), b.distance])
+  );
 
-  // Bu işletmelere ait ürünleri getir
   const products = await Product.aggregate([
     { $match: { businessId: { $in: businessIds } } },
     {
@@ -66,22 +63,23 @@ export const GET = withDB(async (req) => {
             businessName: '$businessName',
             businessId: '$businessId',
             price: '$price',
-            productUrl: '$productUrl'
-          }
-        }
-      }
+            productUrl: '$productUrl',
+            image: '$image',
+          },
+        },
+      },
     },
+    { $sort: { minPrice: 1 } },
     { $skip: skip },
-    { $limit: limit }
+    { $limit: limit },
   ]);
 
-  // İşletme mesafelerini sonuçlara ekle
   const result = products.map(group => ({
     ...group,
     businesses: group.businesses.map(b => ({
       ...b,
-      distance: businessDistances[b.businessId?.toString()] || null
-    }))
+      distance: businessDistances[b.businessId?.toString()] || null,
+    })),
   }));
 
   return NextResponse.json({
@@ -89,7 +87,7 @@ export const GET = withDB(async (req) => {
     pagination: {
       page,
       pageSize,
-      total: result.length
-    }
+      total: result.length,
+    },
   });
 });

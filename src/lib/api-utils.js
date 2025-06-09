@@ -1,3 +1,9 @@
+// ✅ lib/api-utils.js — Geliştirilmiş Versiyon
+
+import { connectDB } from './mongodb';
+import { NextResponse } from 'next/server';
+
+// Çok yönlü filtreleme
 export function getFiltersFromQuery(searchParams) {
   const filters = {};
   const map = {
@@ -10,12 +16,27 @@ export function getFiltersFromQuery(searchParams) {
     brand: 'brand',
     category_slug: 'category_slug',
     group_slug: 'group_slug',
-    businessName: 'businessName'
+    businessName: 'businessName',
+    is_unique_group: 'is_unique_group'
   };
+
   Object.entries(map).forEach(([param, field]) => {
     const val = searchParams.get(param);
-    if (val) filters[field] = val;
+    if (val) {
+      if (val === 'true') filters[field] = true;
+      else if (val === 'false') filters[field] = false;
+      else filters[field] = val;
+    }
   });
+
+  // Çoklu değer destekleri (örn. marka seçimi)
+  const brands = searchParams.getAll('brand');
+  if (brands.length > 1) filters.brand = { $in: brands };
+
+  const businesses = searchParams.getAll('businessName');
+  if (businesses.length > 1) filters.businessName = { $in: businesses };
+
+  // Fiyat aralığı
   const min = parseFloat(searchParams.get('minPrice'));
   const max = parseFloat(searchParams.get('maxPrice'));
   if (!isNaN(min) || !isNaN(max)) {
@@ -23,15 +44,15 @@ export function getFiltersFromQuery(searchParams) {
     if (!isNaN(min)) filters.price.$gte = min;
     if (!isNaN(max)) filters.price.$lte = max;
   }
+
+  // Arama (fulltext)
   const q = searchParams.get('q');
   if (q) {
     filters.group_title = { $regex: q, $options: 'i' };
   }
+
   return filters;
 }
-
-import { connectDB } from './mongodb';
-import { NextResponse } from 'next/server';
 
 export function errorResponse(error, status = 500) {
   return NextResponse.json({ error }, { status });
@@ -43,7 +64,7 @@ export function withDB(handler) {
       await connectDB();
       return await handler(...args);
     } catch (err) {
-      console.error(err);
+      console.error(`[DB ERROR]: ${err.message}`);
       return errorResponse('Internal server error', 500);
     }
   };

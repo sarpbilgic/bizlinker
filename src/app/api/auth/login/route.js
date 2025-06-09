@@ -1,5 +1,4 @@
-// ✅ Kullanıcı giriş API'si — token HTTP-only cookie olarak yazılır.
-// Frontend'de login formundan sonra çağrılır. Token cookie'de saklanır.
+// ✅ src/app/api/auth/login/route.js
 
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
@@ -28,19 +27,20 @@ export const POST = withDB(async (req) => {
       throw new Error('JWT_SECRET is not defined in env');
     }
 
-    const token = jwt.sign(
-      { id: user._id, userType: user.userType },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '7d',
+    });
 
-    const res = NextResponse.json({ success: true });
-    res.cookies.set("token", token, {
+    const res = NextResponse.json({
+      success: true,
+      user: { id: user._id, email: user.email, name: user.name },
+    });
+    res.cookies.set('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60,
-      path: "/"
+      path: '/',
     });
 
     return res;
