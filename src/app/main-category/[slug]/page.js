@@ -41,15 +41,23 @@ export default function MainCategoryPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const decodedSlug = decodeURIComponent(slug);
-        const [catRes, groupRes, brandRes] = await Promise.all([
-          axios.get('/api/categories'),
-          axios.get(`/api/grouped-by-category?main=${decodedSlug}`),
-          axios.get(`/api/brands?main_category=${decodedSlug}`)
+        // 1. Fetch all categories
+        const catRes = await axios.get('/api/categories');
+        // 2. Find the original main category name from the slug
+        const allCategories = catRes.data.categories;
+        const mainCategoryObj = allCategories.find(
+          c => slugify(c.main) === slug
+        );
+        const originalMain = mainCategoryObj?.main || decodeURIComponent(slug);
+
+        setSubcategories(mainCategoryObj?.subs || []);
+
+        // 3. Use the original name for API requests
+        const [groupRes, brandRes] = await Promise.all([
+          axios.get(`/api/grouped-by-category?main=${encodeURIComponent(originalMain)}`),
+          axios.get(`/api/brands?main_category=${encodeURIComponent(originalMain)}`)
         ]);
 
-        const filtered = catRes.data.categories.find(c => slugify(c.main) === slugify(decodedSlug));
-        setSubcategories(filtered?.subs || []);
         setProducts(groupRes.data);
         setBrands(brandRes.data.data || []);
       } catch (err) {
@@ -70,7 +78,7 @@ export default function MainCategoryPage() {
       </h1>
 
       {/* Alt kategoriler */}
-      {subcategories.length > 0 && (
+      {subcategories.length > 0 ? (
         <section className="mb-10">
           <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Alt Kategoriler</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
@@ -90,6 +98,8 @@ export default function MainCategoryPage() {
             ))}
           </div>
         </section>
+      ) : !loading && (
+        <div className="mb-10 text-gray-500 dark:text-gray-400">Alt kategori bulunamadı.</div>
       )}
 
       {/* Popüler Ürünler */}
@@ -99,10 +109,12 @@ export default function MainCategoryPage() {
         </h2>
         {loading ? (
           <p className="text-gray-500 dark:text-gray-400">Yükleniyor...</p>
+        ) : products.flatMap(p => p.groups).length === 0 ? (
+          <p className="text-gray-500 dark:text-gray-400">Bu kategoriye ait popüler ürün bulunamadı.</p>
         ) : (
           <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide scroll-smooth snap-x snap-mandatory">
             {products.flatMap(p => p.groups).map((g, i) => (
-              <div key={i} className="snap-start min-w-[250px] max-w-[250px] bg-white dark:bg-zinc-800 rounded-xl shadow p-4 border dark:border-zinc-700">
+              <div key={i} className="snap-start min-w-[250px] max-w-[250px] bg-white dark:bg-zinc-800 rounded-xl shadow p-4 border dark:border-zinc-700 transition-transform hover:scale-105 duration-200">
                 <img src={g.image || '/no-image.png'} className="h-36 w-full object-contain mb-3" alt={g.title} />
                 <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-1 line-clamp-2">{g.title}</h3>
                 <p className="text-green-600 font-bold text-lg">{g.price?.toLocaleString('tr-TR')} ₺</p>
@@ -117,7 +129,7 @@ export default function MainCategoryPage() {
       </section>
 
       {/* Alt kategori itemlarından örnek karşılaştırmalar */}
-      {!loading && categoryItems.slice(0, 3).map((item, index) => (
+      {!loading && categoryItems.length > 0 && categoryItems.slice(0, 3).map((item, index) => (
         <section key={index} className="mb-12">
           <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
             En Ucuz {item} Ürünleri
@@ -127,7 +139,7 @@ export default function MainCategoryPage() {
               .filter(g => slugify(g.categoryTitle) === slugify(item))
               .slice(0, 10)
               .map((g, i) => (
-                <div key={i} className="min-w-[250px] max-w-[250px] bg-white dark:bg-zinc-800 rounded-xl shadow p-4 border dark:border-zinc-700">
+                <div key={i} className="min-w-[250px] max-w-[250px] bg-white dark:bg-zinc-800 rounded-xl shadow p-4 border dark:border-zinc-700 transition-transform hover:scale-105 duration-200">
                   <img src={g.image || '/no-image.png'} className="h-36 w-full object-contain mb-3" alt={g.title} />
                   <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-1 line-clamp-2">{g.title}</h3>
                   <p className="text-green-600 font-bold text-lg">{g.price?.toLocaleString('tr-TR')} ₺</p>
@@ -142,7 +154,7 @@ export default function MainCategoryPage() {
       ))}
 
       {/* Markalar */}
-      {brands.length > 0 && (
+      {brands.length > 0 ? (
         <section>
           <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Popüler Markalar</h2>
           <div className="flex flex-wrap gap-3">
@@ -153,6 +165,8 @@ export default function MainCategoryPage() {
             ))}
           </div>
         </section>
+      ) : !loading && (
+        <div className="text-gray-500 dark:text-gray-400">Bu kategoriye ait marka bulunamadı.</div>
       )}
     </main>
   );

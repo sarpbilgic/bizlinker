@@ -20,7 +20,8 @@ export default function RegisterPage() {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    userType: 'consumer'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -230,6 +231,25 @@ export default function RegisterPage() {
                         <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" />
                       )}
                     </button>
+                  </div>
+                </div>
+
+                {/* User Type Field */}
+                <div>
+                  <label htmlFor="userType" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Hesap Türü
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="userType"
+                      name="userType"
+                      value={formData.userType}
+                      onChange={handleChange}
+                      className="block w-full pl-4 pr-4 py-3 border border-gray-300 dark:border-zinc-600 rounded-xl bg-gray-50 dark:bg-zinc-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+                    >
+                      <option value="consumer">Bireysel Kullanıcı</option>
+                      <option value="business">İşletme</option>
+                    </select>
                   </div>
                 </div>
 

@@ -15,7 +15,6 @@ export const POST = withDB(async (req) => {
       name: z.string().min(1, "Name is required"),
       email: z.string().email(),
       password: z.string().min(6),
-      userType: z.enum(['consumer', 'business']).optional().default('consumer'),
     });
 
     const parsed = schema.safeParse(body);
@@ -23,7 +22,7 @@ export const POST = withDB(async (req) => {
       return errorResponse(parsed.error.errors, 400);
     }
 
-    const { name, email, password, userType } = parsed.data;
+    const { name, email, password } = parsed.data;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -39,7 +38,6 @@ export const POST = withDB(async (req) => {
       name,
       email,
       password: hashedPassword,
-      userType,
     });
 
     return NextResponse.json({ message: 'User created' }, { status: 201 });

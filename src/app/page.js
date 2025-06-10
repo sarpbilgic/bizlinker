@@ -14,9 +14,13 @@ import {
   FireIcon,
   TagIcon,
   TrophyIcon,
-  PercentBadgeIcon
+  ChartBarIcon,
+  ArrowTrendingUpIcon,
+  BoltIcon
 } from '@heroicons/react/24/outline';
 import WatchlistButton from '@/components/WatchlistButton';
+
+const fetcher = url => axios.get(url).then(res => res.data);
 
 export default function HomePage() {
   const [sections, setSections] = useState([]);
@@ -27,8 +31,22 @@ export default function HomePage() {
   const [location, setLocation] = useState(null);
   const [visibleSections, setVisibleSections] = useState(3);
   const [priceFilter, setPriceFilter] = useState({ min: 0, max: 50000 });
+  const [recentSearches, setRecentSearches] = useState([]);
 
   const loaderRef = useRef();
+  const searchInputRef = useRef();
+
+  // Use SWR for stats to keep them fresh
+  const { data: statsData } = useSWR('/api/stats', fetcher, {
+    refreshInterval: 30000, // Refresh every 30 seconds
+    revalidateOnFocus: true
+  });
+
+  useEffect(() => {
+    if (statsData) {
+      setStats(statsData);
+    }
+  }, [statsData]);
 
   const loadMore = useCallback(() => {
     setVisibleSections((prev) => prev + 2);
@@ -46,15 +64,19 @@ export default function HomePage() {
   }, [handleObserver]);
 
   useEffect(() => {
+    // Load recent searches from localStorage
+    const searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+    setRecentSearches(searches);
+  }, []);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const sectionRes = await axios.get(`/api/grouped-by-category?limit=15&minPrice=${priceFilter.min}&maxPrice=${priceFilter.max}`);
         const categoriesRes = await axios.get('/api/categories');
-        const statsRes = await axios.get('/api/stats');
 
         setSections(sectionRes.data);
         setCategories(Array.isArray(categoriesRes.data.categories) ? categoriesRes.data.categories : []);
-        setStats(statsRes.data);
       } catch (error) {
         console.error('Veri alınırken hata oluştu:', error);
       } finally {
@@ -89,11 +111,9 @@ export default function HomePage() {
       groups: section.groups
         .filter(g => (g.title || '').toLowerCase().includes(search.toLowerCase()))
         .sort((a, b) => {
-          // Önce tasarruf yüzdesine göre sırala (daha fazla tasarruf olan önde)
           if (b.savingsPercent !== a.savingsPercent) {
             return b.savingsPercent - a.savingsPercent;
           }
-          // Sonra fiyata göre sırala
           return a.price - b.price;
         })
     }))
@@ -102,6 +122,12 @@ export default function HomePage() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (search.trim()) {
+      // Save to recent searches
+      const searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+      const newSearches = [search, ...searches.filter(s => s !== search)].slice(0, 5);
+      localStorage.setItem('recentSearches', JSON.stringify(newSearches));
+      setRecentSearches(newSearches);
+      
       window.location.href = `/search?q=${encodeURIComponent(search)}`;
     }
   };
@@ -131,26 +157,94 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-blue-50 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900">
       <div className="max-w-7xl mx-auto px-4 py-10">
-        <form onSubmit={handleSearch} className="mb-8">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-blue-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-            <div className="relative flex bg-white dark:bg-zinc-800 rounded-2xl shadow-xl border border-gray-200 dark:border-zinc-700 overflow-hidden">
-              <div className="flex items-center pl-6">
-                <MagnifyingGlassIcon className="w-6 h-6 text-gray-400" />
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+            En İyi Fiyatları{' '}
+            <span className="bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
+              Karşılaştırın
+            </span>
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            KKTC'nin farklı elektronik firmalarından anlık fiyat karşılaştırması yapın, en uygun fiyatı bulun.
+          </p>
+        </div>
+
+        {/* Search Form with Recent Searches */}
+        <div className="mb-8">
+          <form onSubmit={handleSearch} className="mb-4">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-blue-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+              <div className="relative flex bg-white dark:bg-zinc-800 rounded-2xl shadow-xl border border-gray-200 dark:border-zinc-700 overflow-hidden">
+                <div className="flex items-center pl-6">
+                  <MagnifyingGlassIcon className="w-6 h-6 text-gray-400" />
+                </div>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Ürün, marka veya kategori ara..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="flex-1 px-4 py-4 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none text-lg"
+                />
+                <button type="submit" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 font-semibold transition duration-200 transform hover:scale-105">
+                  Ara
+                </button>
               </div>
-              <input
-                type="text"
-                placeholder="Ürün, marka veya kategori ara..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="flex-1 px-4 py-4 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none text-lg"
-              />
-              <button type="submit" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 font-semibold transition duration-200 transform hover:scale-105">
-                Ara
-              </button>
+            </div>
+          </form>
+
+          {/* Recent Searches */}
+          {recentSearches.length > 0 && (
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <span>Son aramalar:</span>
+              <div className="flex flex-wrap gap-2">
+                {recentSearches.map((term, i) => (
+                  <Link
+                    key={i}
+                    href={`/search?q=${encodeURIComponent(term)}`}
+                    className="bg-white dark:bg-zinc-800 px-3 py-1 rounded-full text-sm border border-gray-200 dark:border-zinc-700 hover:border-orange-500 dark:hover:border-orange-500 transition-colors"
+                  >
+                    {term}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Stats Section */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 border border-gray-200 dark:border-zinc-700 flex items-center gap-4">
+              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
+                <ChartBarIcon className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Toplam Ürün</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalProducts?.toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 border border-gray-200 dark:border-zinc-700 flex items-center gap-4">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                <ArrowTrendingUpIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Ortalama Tasarruf</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">%{stats.avgSavings?.toFixed(1)}</p>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 border border-gray-200 dark:border-zinc-700 flex items-center gap-4">
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+                <BoltIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Aktif Kullanıcı</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.activeUsers?.toLocaleString()}</p>
+              </div>
             </div>
           </div>
-        </form>
+        )}
 
         {/* Fiyat Filtresi */}
         <div className="mb-8 bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-zinc-700">
@@ -188,12 +282,6 @@ export default function HomePage() {
             </button>
           </div>
         </div>
-
-        {location && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Konum: {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-          </p>
-        )}
 
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Popüler Kategoriler</h2>
@@ -249,75 +337,36 @@ export default function HomePage() {
                           alt={g.title}
                           className="h-44 w-full object-contain bg-gray-50 dark:bg-zinc-700 p-4 group-hover:scale-105 transition-transform duration-300"
                         />
-                        
-                        {/* Tasarruf Badge'i */}
                         {g.savingsPercent > 0 && (
-                          <div className={`absolute top-3 left-3 ${getBadgeColor(g.savingsPercent)} text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1`}>
-                            <PercentBadgeIcon className="w-3 h-3" />
-                            %{g.savingsPercent} TASARRUF
+                          <div className={`absolute top-2 right-2 ${getBadgeColor(g.savingsPercent)} text-white text-xs font-bold px-2 py-1 rounded-full`}>
+                            %{Math.round(g.savingsPercent)} TASARRUF
                           </div>
                         )}
-                        
-                        <div className="absolute top-3 right-3 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                          EN UCUZ
-                        </div>
-
-                        <div className="absolute bottom-3 right-3">
-                          <WatchlistButton 
-                            product={{
-                              id: g.slug || `${g.businessName}-${g.title}`,
-                              name: g.title,
-                              image: g.image,
-                              price: g.price,
-                              businessName: g.businessName,
-                              productUrl: g.productUrl,
-                              brand: g.brand
-                            }}
-                            className="bg-white dark:bg-zinc-800 p-2 rounded-full shadow-lg hover:scale-110 transition-transform"
-                          />
-                        </div>
                       </div>
-                      
-                      <div className="p-6">
-                        <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-tight mb-3 line-clamp-2 min-h-[2.5rem]">{g.title}</h3>
-                        
-                        {/* Marka Bilgisi */}
-                        {g.brand && (
-                          <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-2 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-md inline-block">
-                            {g.brand}
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between mb-3">
+                      <div className="p-4">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 min-h-[2.5rem]">
+                          {g.title}
+                        </h3>
+                        <div className="flex items-center justify-between mb-2">
                           <div>
-                            <div className="text-2xl font-bold text-emerald-600">
+                            <p className="text-green-600 dark:text-green-400 font-bold text-lg">
                               {formatPrice(g.price)}
-                            </div>
+                            </p>
                             {g.maxPrice > g.price && (
-                              <div className="text-sm text-gray-500 line-through">
-                                {formatPrice(g.maxPrice)}
-                              </div>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                <span className="line-through">{formatPrice(g.maxPrice)}</span>
+                              </p>
                             )}
                           </div>
-                          {g.savings > 0 && (
-                            <div className="text-right">
-                              <div className="text-sm font-semibold text-green-600">
-                                {formatPrice(g.savings)} tasarruf
-                              </div>
-                            </div>
-                          )}
+                          <WatchlistButton productId={g.slug} />
                         </div>
-
-                        <div className="flex items-center justify-between mb-4">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{g.businessName}</p>
-                          {g.productCount > 1 && (
-                            <span className="text-xs bg-gray-100 dark:bg-zinc-700 px-2 py-1 rounded-full text-gray-600 dark:text-gray-400">
-                              {g.productCount} mağaza
-                            </span>
-                          )}
-                        </div>
-
-                        <Link href={`/group/${g.slug}`} className="block text-center bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-3 rounded-xl font-semibold transition duration-200 transform hover:scale-105 shadow-lg">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                          {g.businessName || 'Satıcı Bilinmiyor'}
+                        </p>
+                        <Link
+                          href={`/group/${g.slug}`}
+                          className="block text-center bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-2 rounded-xl font-semibold transition duration-200 transform hover:scale-105"
+                        >
                           Fiyatları Karşılaştır
                         </Link>
                       </div>
@@ -327,8 +376,17 @@ export default function HomePage() {
               </div>
             ))
           )}
-          <div ref={loaderRef} className="h-10" />
         </section>
+
+        {/* Load More Trigger */}
+        {!loading && filteredSections.length > visibleSections && (
+          <div ref={loaderRef} className="text-center py-8">
+            <div className="animate-bounce">
+              <FireIcon className="w-6 h-6 text-orange-500 mx-auto" />
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Daha fazla yükleniyor...</p>
+          </div>
+        )}
       </div>
     </main>
   );

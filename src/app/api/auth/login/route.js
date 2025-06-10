@@ -39,7 +39,12 @@ export const POST = withDB(async (req) => {
 
     const res = NextResponse.json({
       success: true,
-      user: { id: user._id, email: user.email, name: user.name },
+      user: { 
+        id: user._id, 
+        email: user.email, 
+        name: user.name,
+        isAdmin: user.isAdmin 
+      },
     });
     res.cookies.set('token', token, {
       httpOnly: true,

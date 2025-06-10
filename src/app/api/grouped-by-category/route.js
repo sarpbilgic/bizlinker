@@ -7,19 +7,23 @@ export const GET = withDB(async (req) => {
   const limit = parseInt(searchParams.get('limit') || '12', 10);
   const minPrice = parseInt(searchParams.get('minPrice') || '0', 10);
   const maxPrice = parseInt(searchParams.get('maxPrice') || '999999', 10);
+  const mainCategory = searchParams.get('main');
 
-  // İyileştirilmiş aggregation pipeline
+  // Build match object dynamically for flexibility
+  const match = {
+    group_id: { $ne: null },
+    price: { $gte: minPrice, $lte: maxPrice },
+    businessName: { $in: ['Durmazz', 'Digikey Computer', 'Fıstık Bilgisayar'] }
+  };
+  // Only filter by main_category if main param is provided
+  if (mainCategory) {
+    match.main_category = mainCategory;
+  }
+
   const grouped = await Product.aggregate([
-    { 
-      $match: { 
-        group_id: { $ne: null },
-        price: { $gte: minPrice, $lte: maxPrice },
-        // Sadece güvenilir firmaları göster
-        businessName: { $in: ['Durmazz', 'Digikey Computer', 'Fıstık Bilgisayar'] }
-      } 
-    },
+    { $match: match },
     { $sort: { price: 1, createdAt: -1 } },
-    { $limit: 500 }, // Daha fazla ürün arasından seçim yap
+    { $limit: 500 },
     {
       $group: {
         _id: '$group_id',
@@ -36,7 +40,6 @@ export const GET = withDB(async (req) => {
         main_category: { $first: '$main_category' },
         brand: { $first: '$brand' },
         productCount: { $sum: 1 },
-        // Farklı firmalardaki fiyat aralığı
         priceRange: {
           $push: {
             business: '$businessName',
@@ -47,13 +50,11 @@ export const GET = withDB(async (req) => {
     },
     {
       $addFields: {
-        // Tasarruf miktarı hesapla
         savings: { $subtract: ['$maxPrice', '$minPrice'] },
-        // Fiyat farkı yüzdesi
         savingsPercent: {
           $cond: {
             if: { $gt: ['$maxPrice', 0] },
-            then: { 
+            then: {
               $multiply: [
                 { $divide: [{ $subtract: ['$maxPrice', '$minPrice'] }, '$maxPrice'] },
                 100
@@ -100,10 +101,10 @@ export const GET = withDB(async (req) => {
     }
   }
 
-  // Kategorileri ürün sayısına göre sırala (daha fazla ürünü olan kategoriler önce)
+  // Sort categories by product count and filter for at least 3 products
   const sortedCategories = Array.from(categoryMap.values())
     .sort((a, b) => b.groups.length - a.groups.length)
-    .filter(category => category.groups.length >= 3); // En az 3 ürünü olan kategorileri göster
+    .filter(category => category.groups.length >= 3);
 
   return NextResponse.json(sortedCategories);
 });
