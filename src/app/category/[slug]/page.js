@@ -302,7 +302,7 @@ export default function CategoryPage() {
         case 'stores_desc':
           return b.totalProducts - a.totalProducts;
         default:
-          return 0;
+      return 0;
       }
     });
   }, [products, filters, sortBy, userLocation]);
@@ -367,15 +367,15 @@ export default function CategoryPage() {
               variants={slideUp}
               className="flex flex-wrap justify-center gap-4 text-sm"
             >
-              {!loading && products.length > 0 && (
+            {!loading && products.length > 0 && (
                 <>
                   <div className="bg-white/80 dark:bg-black/20 backdrop-blur-sm rounded-xl px-6 py-3 border border-white/20 shadow-lg">
                     <div className="flex items-center gap-2">
                       <ArrowTrendingUpIcon className="w-4 h-4 text-green-500" />
-                      <span className="text-green-600 font-semibold">
+                  <span className="text-green-600 font-semibold">
                         En düşük: {Math.min(...products.map(p => p.minPrice || p.best_offer?.price || Infinity)).toLocaleString('tr-TR')} ₺
-                      </span>
-                    </div>
+                  </span>
+                </div>
                   </div>
                   <div className="bg-white/80 dark:bg-black/20 backdrop-blur-sm rounded-xl px-6 py-3 border border-white/20 shadow-lg">
                     <div className="flex items-center gap-2">
@@ -411,7 +411,7 @@ export default function CategoryPage() {
                   <div className="flex items-center gap-2">
                     <FunnelIcon className="w-5 h-5 text-orange-500" />
                     <h2 className="font-semibold text-gray-900 dark:text-white">Filtreler</h2>
-                  </div>
+                </div>
                   <button
                     onClick={clearFilters}
                     className="text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 hover:underline transition-colors"
@@ -460,9 +460,9 @@ export default function CategoryPage() {
                           {filters.priceRange[1]?.toLocaleString('tr-TR')} ₺
                         </span>
                       </div>
-                    </div>
-                  </div>
-                </div>
+          </div>
+        </div>
+      </div>
 
                 {/* Distance Filter */}
                 {userLocation && (
@@ -523,8 +523,8 @@ export default function CategoryPage() {
                           <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{brand}</span>
                         </label>
                       ))}
-                    </div>
-                  </div>
+          </div>
+            </div>
                 )}
 
                 {/* Business Filter */}
@@ -535,7 +535,7 @@ export default function CategoryPage() {
                         <BuildingStorefrontIcon className="w-4 h-4 text-green-600" />
                       </span>
                       Firmalar
-                    </h3>
+            </h3>
                     <div className="space-y-2 max-h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent">
                       {filterOptions.businesses.map(business => (
                         <label key={business} className="flex items-center p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700/50 transition-colors">
@@ -553,7 +553,7 @@ export default function CategoryPage() {
                           <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{business}</span>
                         </label>
                       ))}
-                    </div>
+          </div>
                   </div>
                 )}
               </div>
@@ -586,26 +586,26 @@ export default function CategoryPage() {
                 </div>
 
                 <div className="flex items-center gap-2 bg-gray-100 dark:bg-zinc-700 rounded-lg p-1">
-                  <button
-                    onClick={() => setViewMode('grid')}
+                    <button
+                      onClick={() => setViewMode('grid')}
                     className={`p-2 rounded-md transition-all ${
-                      viewMode === 'grid'
+                        viewMode === 'grid'
                         ? 'bg-white dark:bg-zinc-600 text-orange-600 shadow-sm'
                         : 'text-gray-600 dark:text-gray-400 hover:text-orange-600'
-                    }`}
-                  >
+                      }`}
+                    >
                     <Squares2X2Icon className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
                     className={`p-2 rounded-md transition-all ${
-                      viewMode === 'list'
+                        viewMode === 'list'
                         ? 'bg-white dark:bg-zinc-600 text-orange-600 shadow-sm'
                         : 'text-gray-600 dark:text-gray-400 hover:text-orange-600'
-                    }`}
-                  >
+                      }`}
+                    >
                     <ListBulletIcon className="w-5 h-5" />
-                  </button>
+                    </button>
                 </div>
               </div>
             </div>

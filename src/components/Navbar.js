@@ -29,6 +29,39 @@ export default function Navbar() {
   const [suggestions, setSuggestions] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
   const searchRef = useRef(null);
+  const categoryTimeoutRef = useRef(null);
+  const userMenuTimeoutRef = useRef(null);
+
+  // Clear timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current);
+      if (userMenuTimeoutRef.current) clearTimeout(userMenuTimeoutRef.current);
+    };
+  }, []);
+
+  const handleCategoryMouseEnter = () => {
+    if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current);
+    setCategoryOpen(true);
+  };
+
+  const handleCategoryMouseLeave = () => {
+    categoryTimeoutRef.current = setTimeout(() => {
+      setCategoryOpen(false);
+      setHoveredMain(null);
+    }, 300);
+  };
+
+  const handleUserMenuMouseEnter = () => {
+    if (userMenuTimeoutRef.current) clearTimeout(userMenuTimeoutRef.current);
+    setUserMenuOpen(true);
+  };
+
+  const handleUserMenuMouseLeave = () => {
+    userMenuTimeoutRef.current = setTimeout(() => {
+      setUserMenuOpen(false);
+    }, 300);
+  };
 
   useEffect(() => {
     axios.get('/api/categories')
@@ -90,7 +123,13 @@ export default function Navbar() {
     <nav className="w-full bg-white dark:bg-zinc-900 border-b shadow sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 lg:px-6 relative">
         {categoryOpen && (
-          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 z-40" onClick={() => setCategoryOpen(false)}></div>
+          <div 
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 z-40" 
+            onClick={() => {
+              setCategoryOpen(false);
+              setHoveredMain(null);
+            }}
+          />
         )}
 
         <div className="flex items-center justify-between h-16 relative z-50 gap-3">
@@ -98,14 +137,10 @@ export default function Navbar() {
             BizLinker
           </Link>
 
-          <div className="relative hidden lg:block"
-            onMouseEnter={() => setCategoryOpen(true)}
-            onMouseLeave={() => {
-              setTimeout(() => {
-                //setHoveredMain(null);
-                setCategoryOpen(false);
-              }, 500);
-            }}
+          <div 
+            className="relative hidden lg:block"
+            onMouseEnter={handleCategoryMouseEnter}
+            onMouseLeave={handleCategoryMouseLeave}
           >
             <button className="flex items-center gap-1 px-4 py-2 rounded-md bg-orange-500 text-white text-sm font-medium">
               Kategoriler
@@ -114,34 +149,44 @@ export default function Navbar() {
             {categoryOpen && (
               <div 
                 className="absolute left-0 top-[48px] flex z-50 bg-white dark:bg-zinc-800 shadow-xl border rounded-xl min-w-[750px] overflow-hidden"
-                onMouseEnter={() => setCategoryOpen(true)}
-                onMouseLeave={() => {
-                  setTimeout(() => {
-                    //setHoveredMain(null);
-                    setCategoryOpen(false);
-                  }, 300);
-                }}
+                onMouseEnter={handleCategoryMouseEnter}
+                onMouseLeave={handleCategoryMouseLeave}
               >
                 <div className="w-64 border-r max-h-[400px] overflow-y-auto">
                   {Array.isArray(menu) && menu.map((cat, idx) => (
-                    <div
+                    <Link
                       key={idx}
+                      href={`/main-category/${cat.main.toLowerCase().replace(/\s+/g, '-')}`}
                       onMouseEnter={() => setHoveredMain(cat.main)}
-                      className={`px-4 py-3 text-sm cursor-pointer hover:bg-orange-50 dark:hover:bg-orange-900 ${hoveredMain === cat.main ? 'bg-orange-100 dark:bg-orange-800 font-semibold' : ''}`}
+                      className={`block px-4 py-3 text-sm cursor-pointer hover:bg-orange-50 dark:hover:bg-orange-900 ${
+                        hoveredMain === cat.main ? 'bg-orange-100 dark:bg-orange-800 font-semibold' : ''
+                      }`}
                     >
                       {cat.main}
-                    </div>
+                    </Link>
                   ))}
                 </div>
                 <div className="flex-1 p-6 max-h-[400px] overflow-y-auto bg-white dark:bg-zinc-900">
                   <div className="grid grid-cols-2 gap-6">
                     {menu.find((m) => m.main === hoveredMain)?.subs.map((sub, i) => (
                       <div key={i}>
-                        <h4 className="text-sm font-semibold text-gray-800 dark:text-white border-b pb-1 mb-2">{sub.sub}</h4>
+                        <Link 
+                          href={`/main-category/${hoveredMain?.toLowerCase().replace(/\s+/g, '-')}/${sub.sub.toLowerCase().replace(/\s+/g, '-')}`}
+                          className="block text-sm font-semibold text-gray-800 dark:text-white border-b pb-1 mb-2 hover:text-orange-600"
+                        >
+                          {sub.sub}
+                        </Link>
                         <ul className="space-y-1">
                           {sub.items.map((item, j) => (
                             <li key={j}>
-                              <Link href={`/category/${item.toLowerCase().replace(/\s+/g, '-')}`} className="text-sm text-gray-600 dark:text-gray-300 hover:text-orange-600">
+                              <Link 
+                                href={`/category/${item.toLowerCase().replace(/\s+/g, '-')}`} 
+                                className="text-sm text-gray-600 dark:text-gray-300 hover:text-orange-600 hover:underline"
+                                onClick={() => {
+                                  setCategoryOpen(false);
+                                  setHoveredMain(null);
+                                }}
+                              >
                                 {item}
                               </Link>
                             </li>
@@ -192,9 +237,10 @@ export default function Navbar() {
             )}
           </div>
 
-          <div className="relative hidden lg:block"
-            onMouseEnter={() => setUserMenuOpen(true)}
-            onMouseLeave={() => setTimeout(() => setUserMenuOpen(false), 500)}
+          <div 
+            className="relative hidden lg:block"
+            onMouseEnter={handleUserMenuMouseEnter}
+            onMouseLeave={handleUserMenuMouseLeave}
           >
             <button className="flex items-center gap-2 text-sm px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800">
               <UserCircleIcon className="w-6 h-6 text-gray-600 dark:text-gray-200" />
@@ -203,19 +249,51 @@ export default function Navbar() {
             {userMenuOpen && (
               <div 
                 className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border rounded-md shadow-lg"
-                onMouseEnter={() => setUserMenuOpen(true)}
-                onMouseLeave={() => setTimeout(() => setUserMenuOpen(false), 300)}
+                onMouseEnter={handleUserMenuMouseEnter}
+                onMouseLeave={handleUserMenuMouseLeave}
               >
                 {user ? (
                   <>
-                    <Link href="/profile" className="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-zinc-800">👤 Profile</Link>
-                    <Link href="/watchlist" className="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-zinc-800">⭐ Watchlist</Link>
-                    <button onClick={logout} className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900">🚪 Logout</button>
+                    <Link 
+                      href="/profile" 
+                      className="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      👤 Profile
+                    </Link>
+                    <Link 
+                      href="/watchlist" 
+                      className="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      ⭐ Watchlist
+                    </Link>
+                    <button 
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        logout();
+                      }} 
+                      className="w-full text-left px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
+                    >
+                      🚪 Logout
+                    </button>
                   </>
                 ) : (
                   <>
-                    <Link href="/login" className="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-zinc-800">🔑 Login</Link>
-                    <Link href="/register" className="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-zinc-800">✨ Register</Link>
+                    <Link 
+                      href="/login" 
+                      className="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      🔑 Login
+                    </Link>
+                    <Link 
+                      href="/register" 
+                      className="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      ✨ Register
+                    </Link>
                   </>
                 )}
               </div>

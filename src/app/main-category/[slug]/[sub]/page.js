@@ -1,4 +1,3 @@
-// ✅ src/app/main-category/[slug]/page.js
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { ChevronRightIcon } from '@heroicons/react/24/outline';
+import { ChevronRightIcon, TagIcon } from '@heroicons/react/24/outline';
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -14,7 +13,7 @@ const fadeIn = {
   exit: { opacity: 0, y: -20 }
 };
 
-export default function MainCategoryPage() {
+export default function SubCategoryPage() {
   const params = useParams();
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,13 +25,24 @@ export default function MainCategoryPage() {
         const mainCategory = res.data.categories.find(
           cat => cat.main.toLowerCase().replace(/\s+/g, '-') === params.slug
         );
-        setCategory(mainCategory);
+        
+        if (mainCategory) {
+          const subCategory = mainCategory.subs.find(
+            sub => sub.sub.toLowerCase().replace(/\s+/g, '-') === params.sub
+          );
+          
+          setCategory({
+            main: mainCategory.main,
+            sub: subCategory
+          });
+        }
+        
         setLoading(false);
       })
       .catch(() => {
         setLoading(false);
       });
-  }, [params.slug]);
+  }, [params.slug, params.sub]);
 
   if (loading) {
     return (
@@ -42,7 +52,7 @@ export default function MainCategoryPage() {
             <div className="relative">
               <div className="w-16 h-16 border-4 border-orange-200 dark:border-orange-900 rounded-full animate-spin border-t-orange-500"></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-6 h-6 text-orange-500 animate-pulse">⚡</div>
+                <TagIcon className="w-6 h-6 text-orange-500 animate-pulse" />
               </div>
             </div>
           </div>
@@ -51,13 +61,13 @@ export default function MainCategoryPage() {
     );
   }
 
-  if (!category) {
+  if (!category || !category.sub) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-blue-50 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900">
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Category Not Found</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">The category you're looking for doesn't exist.</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">The subcategory you're looking for doesn't exist.</p>
             <Link href="/" className="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
               Go Home
             </Link>
@@ -77,17 +87,31 @@ export default function MainCategoryPage() {
           variants={fadeIn}
           className="space-y-8"
         >
+          {/* Breadcrumb */}
+          <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+            <Link href="/" className="hover:text-orange-600">Home</Link>
+            <ChevronRightIcon className="w-4 h-4" />
+            <Link 
+              href={`/main-category/${params.slug}`}
+              className="hover:text-orange-600"
+            >
+              {category.main}
+            </Link>
+            <ChevronRightIcon className="w-4 h-4" />
+            <span className="text-gray-900 dark:text-white">{category.sub.sub}</span>
+          </nav>
+
           {/* Header */}
           <div className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700 p-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{category.main}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{category.sub.sub}</h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Explore all subcategories and products in {category.main}
+              Browse all products in {category.sub.sub}
             </p>
           </div>
 
-          {/* Subcategories Grid */}
+          {/* Category Items Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {category.subs.map((sub, idx) => (
+            {category.sub.items.map((item, idx) => (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
@@ -96,30 +120,15 @@ export default function MainCategoryPage() {
                 className="bg-white dark:bg-zinc-800 rounded-xl shadow-lg border border-gray-200 dark:border-zinc-700 overflow-hidden group hover:shadow-xl transition-all"
               >
                 <Link 
-                  href={`/main-category/${params.slug}/${sub.sub.toLowerCase().replace(/\s+/g, '-')}`}
+                  href={`/category/${item.toLowerCase().replace(/\s+/g, '-')}`}
                   className="block p-6"
                 >
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 group-hover:text-orange-600 transition-colors">
-                    {sub.sub}
-                  </h2>
-                  <ul className="space-y-2">
-                    {sub.items.slice(0, 5).map((item, i) => (
-                      <li key={i} className="flex items-center text-gray-600 dark:text-gray-400">
-                        <ChevronRightIcon className="w-4 h-4 mr-2 text-orange-500" />
-                        <Link 
-                          href={`/category/${item.toLowerCase().replace(/\s+/g, '-')}`}
-                          className="hover:text-orange-600 hover:underline"
-                        >
-                          {item}
-                        </Link>
-                      </li>
-                    ))}
-                    {sub.items.length > 5 && (
-                      <li className="text-sm text-orange-500 mt-2">
-                        +{sub.items.length - 5} more categories
-                      </li>
-                    )}
-                  </ul>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white group-hover:text-orange-600 transition-colors">
+                      {item}
+                    </h2>
+                    <ChevronRightIcon className="w-5 h-5 text-gray-400 group-hover:text-orange-600 transition-colors" />
+                  </div>
                 </Link>
               </motion.div>
             ))}
@@ -128,4 +137,4 @@ export default function MainCategoryPage() {
       </div>
     </main>
   );
-}
+} 
