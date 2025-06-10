@@ -224,7 +224,7 @@ export default function SearchPage() {
                 
                 return (
                   <div 
-                    key={item._id} 
+                    key={`${item._id}-${index}`}
                     className={`group relative bg-white dark:bg-zinc-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border ${
                       isLowestPrice
                         ? 'border-emerald-300 dark:border-emerald-700 ring-2 ring-emerald-200 dark:ring-emerald-800' 
