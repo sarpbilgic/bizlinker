@@ -4,20 +4,14 @@ import { withDB } from '@/lib/api-utils';
 
 export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
-  const limit = parseInt(searchParams.get('limit') || '12', 10);
-  const minPrice = parseInt(searchParams.get('minPrice') || '0', 10);
-  const maxPrice = parseInt(searchParams.get('maxPrice') || '999999', 10);
-  const mainCategory = searchParams.get('main');
+  const main = searchParams.get('main');
+  const limit = parseInt(searchParams.get('limit')) || 10;
 
-  // Build match object dynamically for flexibility
-  const match = {
-    group_id: { $ne: null },
-    price: { $gte: minPrice, $lte: maxPrice },
-    businessName: { $in: ['Durmazz', 'Digikey Computer', 'Fıstık Bilgisayar'] }
-  };
-  // Only filter by main_category if main param is provided
-  if (mainCategory) {
-    match.main_category = mainCategory;
+  const match = {};
+  if (main) {
+    // Convert to regex pattern that matches both formats
+    const searchPattern = main.replace(/-/g, '[- ]');
+    match.main_category = { $regex: new RegExp(`^${searchPattern}$`, 'i') };
   }
 
   const grouped = await Product.aggregate([

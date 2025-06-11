@@ -48,19 +48,49 @@ export default function HomePage() {
     }
   }, [statsData]);
 
+  const filteredSections = sections
+    .map(section => ({
+      ...section,
+      groups: section.groups
+        .filter(g => (g.title || '').toLowerCase().includes(search.toLowerCase()))
+        .sort((a, b) => {
+          if (b.savingsPercent !== a.savingsPercent) {
+            return b.savingsPercent - a.savingsPercent;
+          }
+          return a.price - b.price;
+        })
+    }))
+    .filter(section => section.groups.length > 0);
+
   const loadMore = useCallback(() => {
-    setVisibleSections((prev) => prev + 2);
-  }, []);
+    if (!loading && filteredSections.length > visibleSections) {
+      setVisibleSections((prev) => prev + 3);
+    }
+  }, [loading, filteredSections.length, visibleSections]);
 
   const handleObserver = useCallback((entries) => {
     const target = entries[0];
-    if (target.isIntersecting) loadMore();
-  }, [loadMore]);
+    if (target.isIntersecting && !loading) {
+      loadMore();
+    }
+  }, [loadMore, loading]);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(handleObserver, { threshold: 1.0 });
-    if (loaderRef.current) observer.observe(loaderRef.current);
-    return () => observer.disconnect();
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: '100px',
+      threshold: 0.1
+    });
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current);
+      }
+    };
   }, [handleObserver]);
 
   useEffect(() => {
@@ -72,8 +102,11 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const sectionRes = await axios.get(`/api/grouped-by-category?limit=15&minPrice=${priceFilter.min}&maxPrice=${priceFilter.max}`);
-        const categoriesRes = await axios.get('/api/categories');
+        setLoading(true);
+        const [sectionRes, categoriesRes] = await Promise.all([
+          axios.get(`/api/grouped-by-category?limit=30&minPrice=${priceFilter.min}&maxPrice=${priceFilter.max}`),
+          axios.get('/api/categories')
+        ]);
 
         setSections(sectionRes.data);
         setCategories(Array.isArray(categoriesRes.data.categories) ? categoriesRes.data.categories : []);
@@ -104,20 +137,6 @@ export default function HomePage() {
       );
     }
   }, [priceFilter]);
-
-  const filteredSections = sections
-    .map(section => ({
-      ...section,
-      groups: section.groups
-        .filter(g => (g.title || '').toLowerCase().includes(search.toLowerCase()))
-        .sort((a, b) => {
-          if (b.savingsPercent !== a.savingsPercent) {
-            return b.savingsPercent - a.savingsPercent;
-          }
-          return a.price - b.price;
-        })
-    }))
-    .filter(section => section.groups.length >= 3);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -312,7 +331,7 @@ export default function HomePage() {
         </section>
 
         <section>
-          {loading ? (
+          {loading && visibleSections === 3 ? (
             <div className="text-center py-20">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-500 border-t-transparent mx-auto mb-4"></div>
               <p className="text-gray-600 dark:text-gray-400">En iyi fırsatlar yükleniyor...</p>
