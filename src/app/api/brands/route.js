@@ -21,16 +21,16 @@ export const GET = withDB(async (req) => {
     { $match: match },
     { 
       $group: {
-        _id: '$brand',
-        count: { $sum: 1 }
+      _id: '$brand',
+      count: { $sum: 1 }
       }
     },
     { $sort: { count: -1 } },
     { 
       $project: {
-        name: '$_id',
-        count: 1,
-        _id: 0
+      name: '$_id',
+      count: 1,
+      _id: 0
       }
     }
   ];

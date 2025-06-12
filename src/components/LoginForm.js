@@ -1,65 +1,131 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import { signIn } from 'next-auth/react';
+import { EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 
-export default function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+import Form from './ui/Form';
+import Input from './ui/Input';
+import Button from './ui/Button';
+import Card from './ui/Card';
+
+const LoginForm = () => {
   const router = useRouter();
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    const formData = new FormData(e.target);
+    const email = formData.get('email');
+    const password = formData.get('password');
+
     try {
-      const res = await axios.post('/api/auth/login', { email, password });
-      const data = res.data;
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        router.push('/');
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (result?.error) {
+        setError('Invalid email or password');
+        return;
       }
-    } catch {
-      alert('Login failed. Please check your credentials.');
+
+      router.push('/dashboard');
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-[#1a1a1a] p-6 rounded-lg shadow-md space-y-4">
+    <Card className="max-w-md w-full mx-auto">
+      <Card.Body>
+        <Form onSubmit={handleSubmit}>
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Please sign in to your account
+            </p>
+          </div>
 
-      <div className="space-y-1">
-        <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-[#0f0f0f] text-black dark:text-white"
-        />
-      </div>
+          {error && (
+            <div className="mb-4">
+              <Form.ErrorMessage>{error}</Form.ErrorMessage>
+            </div>
+          )}
 
-      <div className="space-y-1">
-        <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-[#0f0f0f] text-black dark:text-white"
-        />
-      </div>
+          <Form.Group>
+            <Form.Label htmlFor="email" required>
+              Email address
+            </Form.Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              icon={EnvelopeIcon}
+              placeholder="Enter your email"
+              fullWidth
+            />
+          </Form.Group>
 
-      <button
-        type="submit"
-        className="w-full bg-blue-800 hover:bg-blue-900 mt-3 text-white font-semibold py-2 rounded transition duration-300"
-      >
-        Login
-      </button>
-    </form>
+          <Form.Group>
+            <Form.Label htmlFor="password" required>
+              Password
+            </Form.Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              icon={LockClosedIcon}
+              placeholder="Enter your password"
+              fullWidth
+            />
+          </Form.Group>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                Remember me
+              </label>
+            </div>
+
+            <div className="text-sm">
+              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                Forgot your password?
+              </a>
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            variant="primary"
+            fullWidth
+            isLoading={isLoading}
+            className="mt-4"
+          >
+            Sign in
+          </Button>
+        </Form>
+      </Card.Body>
+    </Card>
   );
-}
+};
+
+export default LoginForm;

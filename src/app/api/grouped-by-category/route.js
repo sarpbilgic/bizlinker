@@ -48,7 +48,7 @@ export const GET = withDB(async (req) => {
         savingsPercent: {
           $cond: {
             if: { $gt: ['$maxPrice', 0] },
-            then: {
+            then: { 
               $multiply: [
                 { $divide: [{ $subtract: ['$maxPrice', '$minPrice'] }, '$maxPrice'] },
                 100
