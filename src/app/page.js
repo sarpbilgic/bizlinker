@@ -18,7 +18,7 @@ import {
   ArrowTrendingUpIcon,
   BoltIcon
 } from '@heroicons/react/24/outline';
-import WatchlistButton from '@/components/WatchlistButton';
+import WatchlistButton from '../components/WatchlistButton';
 
 const fetcher = url => axios.get(url).then(res => res.data);
 

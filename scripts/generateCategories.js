@@ -17,7 +17,7 @@ const Category = mongoose.models.Category || mongoose.model('Category', category
 
 async function generateCategories() {
   await mongoose.connect(process.env.MONGO_URI);
-  console.log('✅ MongoDB bağlantısı kuruldu.');
+  console.log('MongoDB bağlandı.');
 
   const products = await Product.find({
     main_category: { $exists: true },
@@ -41,10 +41,10 @@ async function generateCategories() {
 
   const categories = Array.from(unique.values());
 
-  await Category.deleteMany(); // eski kategorileri temizle
+  await Category.deleteMany(); 
   await Category.insertMany(categories);
 
-  console.log(`✅ ${categories.length} kategori eklendi.`);
+  console.log(`${categories.length} kategori eklendi.`);
   await mongoose.disconnect();
 }
 

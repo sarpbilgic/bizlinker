@@ -1,27 +1,46 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { HeartIcon as HeartIconOutline } from '@heroicons/react/24/outline';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
-export default function WatchlistButton({ product, className = "" }) {
+export default function WatchlistButton({ product, className = "", size = "default" }) {
   const { user } = useAuth();
+  const router = useRouter();
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user && product) {
+    if (user && product?.group_slug) {
       checkIfInWatchlist();
     }
   }, [user, product]);
 
-  const checkIfInWatchlist = () => {
+  const checkIfInWatchlist = async () => {
+    if (!user || !product?.group_slug) return;
+
     try {
+      // API'den kontrol et
+      const response = await axios.get('/api/watchlist');
+      const apiWatchlist = response.data.data;
+      const isInApiList = apiWatchlist.some(item => item.group_slug === product.group_slug);
+      setIsInWatchlist(isInApiList);
+
+      // localStorage'ı API ile senkronize et
       const savedWatchlist = localStorage.getItem(`watchlist_${user.id}`);
-      if (savedWatchlist) {
-        const watchlist = JSON.parse(savedWatchlist);
-        const isInList = watchlist.some(item => item.id === product.id);
-        setIsInWatchlist(isInList);
+      let localWatchlist = savedWatchlist ? JSON.parse(savedWatchlist) : [];
+
+      if (isInApiList && !localWatchlist.some(item => item.group_slug === product.group_slug)) {
+        localWatchlist.unshift({
+          ...product,
+          addedDate: new Date().toISOString()
+        });
+        localStorage.setItem(`watchlist_${user.id}`, JSON.stringify(localWatchlist));
+      } else if (!isInApiList && localWatchlist.some(item => item.group_slug === product.group_slug)) {
+        localWatchlist = localWatchlist.filter(item => item.group_slug !== product.group_slug);
+        localStorage.setItem(`watchlist_${user.id}`, JSON.stringify(localWatchlist));
       }
     } catch (error) {
       console.error('Watchlist kontrol edilemedi:', error);
@@ -30,53 +49,53 @@ export default function WatchlistButton({ product, className = "" }) {
 
   const toggleWatchlist = async () => {
     if (!user) {
-      // Giriş yapmamış kullanıcıyı login sayfasına yönlendir
-      window.location.href = '/login';
+      router.push('/login');
       return;
     }
 
-    if (!product) return;
+    if (!product?.group_slug) {
+      console.error('Product group_slug is required');
+      return;
+    }
 
     setLoading(true);
     try {
-      const savedWatchlist = localStorage.getItem(`watchlist_${user.id}`);
-      let watchlist = savedWatchlist ? JSON.parse(savedWatchlist) : [];
-
       if (isInWatchlist) {
         // Favorilerden çıkar
-        watchlist = watchlist.filter(item => item.id !== product.id);
+        await axios.delete(`/api/watchlist?group_slug=${encodeURIComponent(product.group_slug)}`);
+        
+        // localStorage'dan da çıkar
+        const savedWatchlist = localStorage.getItem(`watchlist_${user.id}`);
+        if (savedWatchlist) {
+          const watchlist = JSON.parse(savedWatchlist);
+          const updatedWatchlist = watchlist.filter(item => item.group_slug !== product.group_slug);
+          localStorage.setItem(`watchlist_${user.id}`, JSON.stringify(updatedWatchlist));
+        }
+        
         setIsInWatchlist(false);
       } else {
         // Favorilere ekle
-        const watchlistItem = {
-          id: product.id || `${product.businessName}-${product.name}-${Date.now()}`,
-          name: product.name,
-          image: product.image,
-          price: product.price,
-          businessName: product.businessName,
-          productUrl: product.productUrl,
-          addedDate: new Date().toISOString(),
-          ...product
-        };
-        watchlist.unshift(watchlistItem); // En başa ekle
+        await axios.post('/api/watchlist', { group_slug: product.group_slug });
+        
+        // localStorage'a da ekle
+        const savedWatchlist = localStorage.getItem(`watchlist_${user.id}`);
+        let watchlist = savedWatchlist ? JSON.parse(savedWatchlist) : [];
+        watchlist.unshift({
+          ...product,
+          addedDate: new Date().toISOString()
+        });
+        localStorage.setItem(`watchlist_${user.id}`, JSON.stringify(watchlist));
+        
         setIsInWatchlist(true);
       }
-
-      localStorage.setItem(`watchlist_${user.id}`, JSON.stringify(watchlist));
-
-      // Optional: API'ye de gönderebiliriz
-      // await fetch('/api/watchlist/toggle', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ product, action: isInWatchlist ? 'remove' : 'add' })
-      // });
-
     } catch (error) {
       console.error('Watchlist güncellenemedi:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const iconSize = size === "large" ? "w-8 h-8" : size === "small" ? "w-4 h-4" : "w-6 h-6";
 
   return (
     <button
@@ -86,11 +105,11 @@ export default function WatchlistButton({ product, className = "" }) {
       title={isInWatchlist ? 'Favorilerden çıkar' : 'Favorilere ekle'}
     >
       {loading ? (
-        <div className="w-6 h-6 animate-spin rounded-full border-2 border-red-500 border-t-transparent"></div>
+        <div className={`${iconSize} animate-spin rounded-full border-2 border-red-500 border-t-transparent`}></div>
       ) : isInWatchlist ? (
-        <HeartIconSolid className="w-6 h-6 text-red-500 group-hover:scale-110 transition-transform" />
+        <HeartIconSolid className={`${iconSize} text-red-500 group-hover:scale-110 transition-transform`} />
       ) : (
-        <HeartIconOutline className="w-6 h-6 text-gray-400 group-hover:text-red-500 group-hover:scale-110 transition-all" />
+        <HeartIconOutline className={`${iconSize} text-gray-400 group-hover:text-red-500 group-hover:scale-110 transition-all`} />
       )}
       
       {/* Tooltip */}

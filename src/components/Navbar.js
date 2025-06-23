@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import {

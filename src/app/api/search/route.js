@@ -12,7 +12,7 @@ export async function GET(req) {
     const searchParams = new URL(req.url).searchParams;
     const params = Object.fromEntries(searchParams.entries());
 
-    // ✅ Zod ile arama parametreleri doğrulama
+    //  Zod verification
     const schema = z.object({
       query: z.string().trim().optional(),
       min: z

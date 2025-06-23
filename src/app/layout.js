@@ -1,7 +1,7 @@
-import { AuthProvider } from '@/context/AuthContext';
-import Navbar from '@components/Navbar';
+import { AuthProvider } from '../context/AuthContext';
+import Navbar from '../components/Navbar';
 import Link from 'next/link';
-import '@app/globals.css';
+import './globals.css';
 import Providers from './providers';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -148,7 +148,7 @@ export default function RootLayout({ children }) {
                     © {new Date().getFullYear()} BizLinker. Tüm hakları saklıdır.
                   </p>
                   <div className="flex items-center gap-4 mt-4 md:mt-0">
-                    <span className="text-gray-400 text-sm">T&uuml;rkiye&apos;nin fiyat karşılaştırma platformu</span>
+                    <span className="text-gray-400 text-sm">Türkiye&apos;nin fiyat karşılaştırma platformu</span>
                   </div>
                 </div>
               </div>

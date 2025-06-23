@@ -15,11 +15,11 @@ const categorySchema = new mongoose.Schema({
   },
   slug: {
     type: String,
-    required: true,       // Örn: "gaming-laptop"
+    required: true,       
     unique: true,
   },
   aliases: {
-    type: [String],       // Örn: ["oyuncu laptop", "gamer laptop"]
+    type: [String],       
     default: [],
   }
 });

@@ -42,13 +42,13 @@ export default function RegisterPage() {
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Şifreler eşleşmiyor');
+      setError('Passwords do not match');
       setLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Şifre en az 6 karakter olmalıdır');
+      setError('Password should be at least 6 characters long');
       setLoading(false);
       return;
     }
@@ -67,10 +67,9 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (res.ok) {
-        router.push('/login?message=Kayıt başarılı! Giriş yapabilirsiniz.');
+        router.push('/login?message=Register successful! You can now log in.');
       } else {
-        // API hatalarını düzgün handle et
-        let errorMessage = 'Kayıt olurken bir hata oluştu';
+        let errorMessage = 'An error occurred while registering';
         if (data.error) {
           if (typeof data.error === 'string') {
             errorMessage = data.error;
@@ -83,7 +82,7 @@ export default function RegisterPage() {
         setError(errorMessage);
       }
     } catch (err) {
-      setError(err.message || 'Kayıt olurken bir hata oluştu');
+      setError(err.message || 'An error occurred while registering');
     } finally {
       setLoading(false);
     }

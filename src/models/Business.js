@@ -10,10 +10,6 @@ const businessSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  address: {
-    type: String,
-    default: '',
-  },
   location: {
     type: {
       type: String,

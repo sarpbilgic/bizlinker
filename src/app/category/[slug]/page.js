@@ -22,6 +22,7 @@ import {
 } from '@heroicons/react/24/outline';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
+import WatchlistButton from '@/components/WatchlistButton';
 
 const fetcher = url => axios.get(url).then(res => res.data);
 
@@ -63,6 +64,19 @@ const ProductCard = ({ product, viewMode }) => {
             %{savingsPercent} Fark
           </div>
         )}
+        <div className="absolute top-2 left-2">
+          <WatchlistButton 
+            product={{
+              id: product._id,
+              name: product.group_title,
+              image: product.image,
+              price: product.minPrice,
+              group_slug: product.group_slug,
+              businessName: product.businesses?.[0]?.businessName
+            }}
+            size="small"
+          />
+        </div>
       </div>
       <div className="p-4 flex-1">
         <h3 className="font-medium text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-orange-600 transition-colors">

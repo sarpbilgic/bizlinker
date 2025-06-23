@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { UserCircleIcon } from '@heroicons/react/24/outline';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function ProfileDropdown() {
   const [open, setOpen] = useState(false);

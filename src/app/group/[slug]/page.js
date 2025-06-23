@@ -1,3 +1,4 @@
+'use client';
 import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import { 
@@ -8,17 +9,43 @@ import {
   ShoppingCartIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline';
+import WatchlistButton from '@/components/WatchlistButton';
+import { useEffect, useState } from 'react';
 
 export async function generateMetadata({ params }) {
   return { title: `${decodeURIComponent(params.slug)} | Fiyat Karşılaştırma` };
 }
 
-export default async function GroupPage({ params }) {
-  await connectDB();
-  const slug = decodeURIComponent(params.slug);
-  const groupProducts = await Product.find({ group_slug: slug }).sort({ price: 1 });
+export default function GroupPage({ params }) {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  if (!groupProducts?.length) return (
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const slug = decodeURIComponent(params.slug);
+        const response = await fetch(`/api/grouped-products?group_slug=${encodeURIComponent(slug)}`);
+        const data = await response.json();
+        setProducts(data.data || []);
+      } catch (error) {
+        console.error('Products fetch error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [params.slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-blue-50 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!products?.length) return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-blue-50 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 flex items-center justify-center">
       <div className="text-center">
         <div className="bg-gray-100 dark:bg-zinc-800 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
@@ -34,7 +61,8 @@ export default async function GroupPage({ params }) {
     </div>
   );
 
-  const title = groupProducts[0].group_title;
+  const product = products[0];
+  const title = product.group_title;
 
   const getFirmColor = (index) => {
     const colors = [
@@ -47,7 +75,7 @@ export default async function GroupPage({ params }) {
     return colors[index] || colors[colors.length - 1];
   };
 
-  const cheapestPrice = groupProducts[0]?.price || 0;
+  const cheapestPrice = products[0]?.price || 0;
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-blue-50 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900">
@@ -61,16 +89,29 @@ export default async function GroupPage({ params }) {
               <span className="text-sm font-medium text-orange-700 dark:text-orange-400">Fiyat Karşılaştırma</span>
             </div>
             
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              <span className="text-orange-600">{title}</span>
-              <br />
-              <span className="text-2xl md:text-3xl bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
-                Fiyat Karşılaştırması
-              </span>
-            </h1>
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                <span className="text-orange-600">{title}</span>
+              </h1>
+              <WatchlistButton 
+                product={{
+                  id: product._id,
+                  name: product.group_title,
+                  image: product.image,
+                  price: product.minPrice,
+                  group_slug: product.group_slug,
+                  businessName: product.businesses?.[0]?.businessName
+                }}
+                size="large"
+              />
+            </div>
+            
+            <span className="text-2xl md:text-3xl bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent block mb-6">
+              Fiyat Karşılaştırması
+            </span>
             
             <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto mb-6">
-              {groupProducts.length} farklı firmadan en iyi teklifleri karşılaştırın
+              {products.length} farklı firmadan en iyi teklifleri karşılaştırın
             </p>
 
             {/* Stats */}
@@ -79,12 +120,12 @@ export default async function GroupPage({ params }) {
                 <span className="text-green-600 font-semibold">En ucuz: {cheapestPrice.toLocaleString('tr-TR')} ₺</span>
               </div>
               <div className="bg-white/60 dark:bg-black/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
-                <span className="text-blue-600 font-semibold">{groupProducts.length} firma</span>
+                <span className="text-blue-600 font-semibold">{products.length} firma</span>
               </div>
-              {groupProducts.length > 1 && (
+              {products.length > 1 && (
                 <div className="bg-white/60 dark:bg-black/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20">
                   <span className="text-orange-600 font-semibold">
-                    Fark: {(groupProducts[groupProducts.length - 1].price - cheapestPrice).toLocaleString('tr-TR')} ₺
+                    Fark: {(products[products.length - 1].price - cheapestPrice).toLocaleString('tr-TR')} ₺
                   </span>
                 </div>
               )}
@@ -105,7 +146,7 @@ export default async function GroupPage({ params }) {
         </div>
 
         <div className="grid gap-6">
-          {groupProducts.map((product, index) => {
+          {products.map((product, index) => {
             const gradientColor = getFirmColor(index);
             const savings = product.price - cheapestPrice;
             const isFirst = index === 0;
