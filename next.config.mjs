@@ -11,8 +11,14 @@ const nextConfig = {
       'www.kibristeknoloji.com',
       'www.irismostore.com',
       'www.sharafstore.com',
-      'www.fistikbilgisayar.com'
-    ]
+      'www.fistikbilgisayar.com',
+      'iet-cdn-007.akinsofteticaret.net',
+      'cdn03.ciceksepeti.com',
+      'dummyimage.com',
+      'as6eaty9uqeg.merlincdn.net',
+      'img-bizlinkerhub.mncdn.com'
+    ],
+    minimumCacheTTL: 60,
   },
   webpack: (config, { isServer }) => {
     config.resolve.alias = {

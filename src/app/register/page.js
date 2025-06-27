@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import BizlinkerLogo from '@/components/BizlinkerLogo';
 import { 
   UserPlusIcon,
   EnvelopeIcon,
@@ -94,21 +95,16 @@ export default function RegisterPage() {
         <div className="max-w-md w-full">
           {/* Logo and Header */}
           <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-blue-600 rounded-2xl flex items-center justify-center">
-                <SparklesIcon className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
-                BizLinker
-              </span>
-            </Link>
+            <div className="flex justify-center mb-6">
+              <BizlinkerLogo size="large" />
+            </div>
             
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Create Account
             </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Join BizLinker and discover the best prices
-              </p>
+            <p className="text-gray-600 dark:text-gray-400">
+              Join BizLinker and discover the best prices
+            </p>
           </div>
 
           {/* Register Form */}

@@ -32,7 +32,8 @@ export function formatGroup(products) {
         businessUrl: p.businessUrl,
         price: p.price,
         productUrl: p.productUrl,
-        image: p.image,
+        image: p.image || base.image || '/no-image.png',
+        name: p.name || p.group_title || base.group_title,
         createdAt: p.createdAt,
         brand: p.brand,
       }))
