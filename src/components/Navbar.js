@@ -6,6 +6,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import BizlinkerLogo from './BizlinkerLogo';
 import {
   Bars3Icon,
   XMarkIcon,
@@ -133,9 +134,7 @@ export default function Navbar() {
         )}
 
         <div className="flex items-center justify-between h-16 relative z-50 gap-3">
-          <Link href="/" className="text-xl font-bold text-orange-600 dark:text-white">
-            BizLinker
-          </Link>
+          <BizlinkerLogo />
 
           <div 
             className="relative hidden lg:block"

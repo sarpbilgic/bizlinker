@@ -1,13 +1,14 @@
 import { AuthProvider } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import Link from 'next/link';
 import './globals.css';
 import Providers from './providers';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export const metadata = {
-  title: 'BizLinker - Price Comparison Platform',
-  description: 'Compare the best prices and find the most affordable option among thousands of products.',
+  title: 'Bizlinker - Compare Prices Across Multiple Stores',
+  description: 'Find the best prices by comparing products across multiple stores in North Cyprus',
   keywords: 'price comparison, cheapest price, shopping, online shopping, product comparison',
   authors: [{ name: 'BizLinker' }],
   openGraph: {
@@ -15,6 +16,15 @@ export const metadata = {
     description: 'Compare the best prices and find the most affordable option among thousands of products.',
     type: 'website',
   },
+  icons: {
+    icon: [
+      {
+        url: '/bizlinker_logo.png',
+        sizes: '32x32',
+        type: 'image/png'
+      }
+    ]
+  }
 };
 
 export default function RootLayout({ children }) {
@@ -41,118 +51,7 @@ export default function RootLayout({ children }) {
               <Providers>{children}</Providers>
             </main>
             
-            {/* Enhanced Footer with Animation */}
-            <footer className="relative bg-gradient-to-r from-gray-900 to-zinc-900 dark:from-zinc-800 dark:to-black text-white overflow-hidden">
-              <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]"></div>
-              <div className="relative max-w-7xl mx-auto px-4 py-12">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                  {/* Logo & Description */}
-                  <div className="md:col-span-2">
-                    <div className="flex items-center gap-2 mb-4 group">
-                      <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-blue-600 rounded-lg flex items-center justify-center transform group-hover:scale-110 transition-transform">
-                        <span className="text-white font-bold text-sm">B</span>
-                      </div>
-                      <span className="text-xl font-bold bg-gradient-to-r from-orange-400 to-blue-400 bg-clip-text text-transparent">
-                        BizLinker
-                      </span>
-                    </div>
-                    <p className="text-gray-300 mb-4 max-w-md leading-relaxed">
-                      Compare the best prices and find the most affordable option among thousands of products. 
-                      Save by instantly comparing prices from 8 different businesses.
-                    </p>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400">
-                      <span className="flex items-center gap-1 hover:text-orange-400 transition-colors">
-                        🏪 8 Businesses
-                      </span>
-                      <span className="flex items-center gap-1 hover:text-orange-400 transition-colors">
-                        📦 10000+ Product
-                      </span>
-                      <span className="flex items-center gap-1 hover:text-orange-400 transition-colors">
-                        💰 Best Price
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Quick Links */}
-                  <div>
-                    <h3 className="font-semibold text-white mb-4 relative">
-                      Quick Links
-                      <span className="absolute -bottom-1 left-0 w-8 h-0.5 bg-gradient-to-r from-orange-500 to-transparent"></span>
-                    </h3>
-                    <ul className="space-y-2 text-gray-300">
-                      <li>
-                        <Link href="/" className="hover:text-orange-400 transition-colors flex items-center gap-2 group">
-                          <span className="w-1 h-1 rounded-full bg-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                          Home
-                        </Link>
-                      </li>
-                      <li>
-                        <Link href="/categories" className="hover:text-orange-400 transition-colors flex items-center gap-2 group">
-                          <span className="w-1 h-1 rounded-full bg-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                          Categories
-                        </Link>
-                      </li>
-                      <li>
-                        <Link href="/search?q=bilgisayar" className="hover:text-orange-400 transition-colors flex items-center gap-2 group">
-                          <span className="w-1 h-1 rounded-full bg-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                          Popular Searches
-                        </Link>
-                      </li>
-                      <li>
-                        <Link href="/about" className="hover:text-orange-400 transition-colors flex items-center gap-2 group">
-                          <span className="w-1 h-1 rounded-full bg-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                          About Us
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* Support */}
-                  <div>
-                    <h3 className="font-semibold text-white mb-4 relative">
-                      Support
-                      <span className="absolute -bottom-1 left-0 w-8 h-0.5 bg-gradient-to-r from-orange-500 to-transparent"></span>
-                    </h3>
-                    <ul className="space-y-2 text-gray-300">
-                      <li>
-                        <Link href="/help" className="hover:text-orange-400 transition-colors flex items-center gap-2 group">
-                          <span className="w-1 h-1 rounded-full bg-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                          Help Center
-                        </Link>
-                      </li>
-                      <li>
-                        <Link href="/contact" className="hover:text-orange-400 transition-colors flex items-center gap-2 group">
-                          <span className="w-1 h-1 rounded-full bg-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                          Contact
-                        </Link>
-                      </li>
-                      <li>
-                        <Link href="/privacy" className="hover:text-orange-400 transition-colors flex items-center gap-2 group">
-                          <span className="w-1 h-1 rounded-full bg-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                          Privacy
-                        </Link>
-                      </li>
-                      <li>
-                        <Link href="/terms" className="hover:text-orange-400 transition-colors flex items-center gap-2 group">
-                          <span className="w-1 h-1 rounded-full bg-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                          Terms of Use
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Bottom Bar */}
-                <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-                  <p className="text-gray-400 text-sm">
-                    © {new Date().getFullYear()} BizLinker. All rights reserved.
-                  </p>
-                  <div className="flex items-center gap-4 mt-4 md:mt-0">
-                    <span className="text-gray-400 text-sm">TRNC's price comparison platform</span>
-                  </div>
-                </div>
-              </div>
-            </footer>
+            <Footer />
           </div>
         </AuthProvider>
       </body>

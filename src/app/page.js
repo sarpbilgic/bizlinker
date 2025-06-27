@@ -16,7 +16,11 @@ import {
   TrophyIcon,
   ChartBarIcon,
   ArrowTrendingUpIcon,
-  BoltIcon
+  BoltIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import WatchlistButton from '../components/WatchlistButton';
 
@@ -29,9 +33,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [location, setLocation] = useState(null);
-  const [visibleSections, setVisibleSections] = useState(6);
+  const [visibleSections, setVisibleSections] = useState(8);
   const [priceFilter, setPriceFilter] = useState({ min: 0, max: 50000 });
   const [recentSearches, setRecentSearches] = useState([]);
+  const [expandedSections, setExpandedSections] = useState(new Set());
+  const [productsPerRow, setProductsPerRow] = useState(10);
 
   const loaderRef = useRef();
   const searchInputRef = useRef();
@@ -64,7 +70,7 @@ export default function HomePage() {
 
   const loadMore = useCallback(() => {
     if (!loading && filteredSections.length > visibleSections) {
-      setVisibleSections((prev) => prev + 3);
+      setVisibleSections((prev) => prev + 4);
     }
   }, [loading, filteredSections.length, visibleSections]);
 
@@ -75,23 +81,23 @@ export default function HomePage() {
     }
   }, [loadMore, loading]);
 
-  //useEffect(() => {
-  //  const observer = new IntersectionObserver(handleObserver, {
-  //    root: null,
-  //    rootMargin: '100px',
-  //    threshold: 0.1
-  //  });
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: '100px',
+      threshold: 0.1
+    });
 
-  //  if (loaderRef.current) {
-  //    observer.observe(loaderRef.current);
-  //  }
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
 
-  //  return () => {
-  //    if (loaderRef.current) {
-  //      observer.unobserve(loaderRef.current);
-  //    }
-  //  };
-  //}, [handleObserver]);
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current);
+      }
+    };
+  }, [handleObserver]);
 
   useEffect(() => {
     // Load recent searches from localStorage
@@ -104,7 +110,7 @@ export default function HomePage() {
       try {
         setLoading(true);
         const [sectionRes, categoriesRes] = await Promise.all([
-          axios.get(`/api/grouped-by-category?limit=30&minPrice=${priceFilter.min}&maxPrice=${priceFilter.max}`),
+          axios.get(`/api/grouped-by-category?limit=30`),
           axios.get('/api/categories')
         ]);
 
@@ -173,230 +179,293 @@ export default function HomePage() {
     return 'bg-green-500';
   };
 
+  const scrollRow = (sectionId, direction) => {
+    const container = document.getElementById(`product-row-${sectionId}`);
+    if (container) {
+      const scrollAmount = direction === 'left' ? -container.offsetWidth : container.offsetWidth;
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const toggleSectionExpansion = (sectionId) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId);
+      } else {
+        newSet.add(sectionId);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-blue-50 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900">
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Compare The{' '}
-            <span className="bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
-              Best Prices
-            </span>
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Instantly compare prices from different electronics businesses in TRNC and find the best price.
-          </p>
-        </div>
+      {/* Hero Section with Enhanced Design */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700">
+        <div className="absolute inset-0 bg-grid-white/15 [mask-image:linear-gradient(0deg,transparent,white)] dark:[mask-image:linear-gradient(0deg,transparent,white)]"></div>
+        <div className="max-w-7xl mx-auto px-4 py-16 sm:py-24">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight">
+              Find the <span className="text-yellow-300">Best Prices</span> in TRNC
+            </h1>
+            <p className="text-lg md:text-xl text-orange-100 max-w-2xl mx-auto mb-8">
+              Compare prices across multiple electronics stores instantly and save money on your purchases.
+            </p>
 
-        {/* Search Form with Recent Searches */}
-        <div className="mb-8">
-          <form onSubmit={handleSearch} className="mb-4">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-blue-500 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-              <div className="relative flex bg-white dark:bg-zinc-800 rounded-2xl shadow-xl border border-gray-200 dark:border-zinc-700 overflow-hidden">
-                <div className="flex items-center pl-6">
-                  <MagnifyingGlassIcon className="w-6 h-6 text-gray-400" />
+            {/* Enhanced Search Form */}
+            <div className="max-w-3xl mx-auto">
+              <form onSubmit={handleSearch} className="mb-4">
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-white dark:bg-zinc-800 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+                  <div className="relative flex bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 dark:border-zinc-700/50 overflow-hidden">
+                    <div className="flex items-center pl-6">
+                      <MagnifyingGlassIcon className="w-6 h-6 text-orange-500" />
+                    </div>
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="Search for product, brand, or category..."
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      className="flex-1 px-4 py-5 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none text-lg"
+                    />
+                    <button type="submit" className="px-8 py-5 bg-orange-600 hover:bg-orange-700 text-white font-semibold transition duration-200">
+                      Search
+                    </button>
+                  </div>
                 </div>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search for product, brand, or category..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="flex-1 px-4 py-4 bg-transparent text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none text-lg"
-                />
-                <button type="submit" className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 font-semibold transition duration-200 transform hover:scale-105">
-                  Search
-                </button>
-              </div>
-            </div>
-          </form>
+              </form>
 
-          {/* Recent Searches */}
-          {recentSearches.length > 0 && (
-            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-              <span>Recent searches:</span>
-              <div className="flex flex-wrap gap-2">
-                {recentSearches.map((term, i) => (
-                  <Link
-                    key={i}
-                    href={`/search?q=${encodeURIComponent(term)}`}
-                    className="bg-white dark:bg-zinc-800 px-3 py-1 rounded-full text-sm border border-gray-200 dark:border-zinc-700 hover:border-orange-500 dark:hover:border-orange-500 transition-colors"
-                  >
-                    {term}
-                  </Link>
-                ))}
-              </div>
+              {/* Recent Searches with Enhanced Design */}
+              {recentSearches.length > 0 && (
+                <div className="flex items-center gap-2 text-sm text-orange-100">
+                  <span>Recent:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {recentSearches.map((term, i) => (
+                      <Link
+                        key={i}
+                        href={`/search?q=${encodeURIComponent(term)}`}
+                        className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 transition-colors"
+                      >
+                        {term}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
+      </div>
 
-        {/* Stats Section */}
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        {/* Stats Section with Enhanced Design */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 border border-gray-200 dark:border-zinc-700 flex items-center gap-4">
-              <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
-                <ChartBarIcon className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Products</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalProducts?.toLocaleString()}</p>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 border border-gray-200 dark:border-zinc-700 flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-                <ArrowTrendingUpIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Average Savings</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">%{stats.avgSavings?.toFixed(1)}</p>
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl blur opacity-10 group-hover:opacity-20 transition duration-500"></div>
+              <div className="relative bg-white dark:bg-zinc-800 rounded-xl p-6 border border-gray-200 dark:border-zinc-700 flex items-center gap-4 hover:border-orange-500 transition-colors">
+                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
+                  <ChartBarIcon className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Products</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalProducts?.toLocaleString()}</p>
+                </div>
               </div>
             </div>
-            <div className="bg-white dark:bg-zinc-800 rounded-xl p-6 border border-gray-200 dark:border-zinc-700 flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-                <BoltIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl blur opacity-10 group-hover:opacity-20 transition duration-500"></div>
+              <div className="relative bg-white dark:bg-zinc-800 rounded-xl p-6 border border-gray-200 dark:border-zinc-700 flex items-center gap-4 hover:border-blue-500 transition-colors">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                  <ArrowTrendingUpIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Unique Products</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.uniqueGroups?.toLocaleString()}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Active User</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.activeUsers?.toLocaleString()}</p>
+            </div>
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-xl blur opacity-10 group-hover:opacity-20 transition duration-500"></div>
+              <div className="relative bg-white dark:bg-zinc-800 rounded-xl p-6 border border-gray-200 dark:border-zinc-700 flex items-center gap-4 hover:border-green-500 transition-colors">
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+                  <BoltIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Businesses</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">8+</p>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Fiyat Filtresi */}
-        <div className="mb-8 bg-white dark:bg-zinc-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-zinc-700">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <TagIcon className="w-5 h-5 text-orange-500" />
-            Price Range
-          </h3>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                placeholder="Min"
-                value={priceFilter.min}
-                onChange={(e) => setPriceFilter(prev => ({ ...prev, min: parseInt(e.target.value) || 0 }))}
-                className="w-24 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-zinc-700 dark:border-zinc-600 dark:text-white"
-              />
-              <span className="text-gray-500">₺</span>
+        {/* Product Sections with Enhanced Design */}
+        {filteredSections.slice(0, visibleSections).map((section, index) => (
+          <section key={section.categorySlug} className="mb-16">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-2">
+                  <FireIcon className="w-6 h-6 text-orange-500" />
+                  {section.categoryTitle}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {section.groups.length} products available
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="hidden sm:flex items-center gap-2">
+                  <button
+                    onClick={() => scrollRow(section.categorySlug, 'left')}
+                    className="p-2 rounded-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  </button>
+                  <button
+                    onClick={() => scrollRow(section.categorySlug, 'right')}
+                    className="p-2 rounded-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
+                  >
+                    <ChevronRightIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  </button>
+                </div>
+                <Link
+                  href={`/category/${section.categorySlug}`}
+                  className="inline-flex items-center gap-2 px-6 py-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+                >
+                  View All
+                  <ArrowTrendingUpIcon className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
-            <span className="text-gray-400">-</span>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                placeholder="Max"
-                value={priceFilter.max}
-                onChange={(e) => setPriceFilter(prev => ({ ...prev, max: parseInt(e.target.value) || 50000 }))}
-                className="w-24 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-zinc-700 dark:border-zinc-600 dark:text-white"
-              />
-              <span className="text-gray-500">₺</span>
+
+            <div className="relative">
+              <div 
+                id={`product-row-${section.categorySlug}`}
+                className="flex overflow-x-auto gap-6 pb-6 scrollbar-hide scroll-smooth snap-x snap-mandatory"
+              >
+                {section.groups
+                  .slice(0, expandedSections.has(section.categorySlug) ? section.groups.length : productsPerRow)
+                  .map((group, groupIndex) => (
+                  <div
+                    key={groupIndex}
+                    className="min-w-[300px] max-w-[300px] snap-start bg-white dark:bg-zinc-800 rounded-xl border border-gray-200 dark:border-zinc-700 overflow-hidden hover:border-orange-500 dark:hover:border-orange-500 transition-all duration-300 hover:shadow-lg group"
+                  >
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <img
+                        src={group.image || '/no-image.png'}
+                        alt={group.title}
+                        className="w-full h-48 object-contain bg-white dark:bg-zinc-900 p-4 group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {group.savingsPercent > 0 && (
+                        <div className={`absolute top-2 right-2 ${getBadgeColor(group.savingsPercent)} text-white text-sm font-bold px-3 py-1 rounded-full shadow-lg`}>
+                          Save {Math.round(group.savingsPercent)}%
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4">
+                      <Link href={`/group/${group.slug}`}>
+                        <h3 className="text-gray-900 dark:text-white font-semibold mb-2 line-clamp-2 hover:text-orange-500 transition-colors">
+                          {group.title}
+                        </h3>
+                      </Link>
+
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div>
+                          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {formatPrice(group.price)}
+                          </p>
+                          {group.maxPrice > group.price && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              Up to {formatPrice(group.maxPrice)}
+                            </p>
+                          )}
+                        </div>
+                        <WatchlistButton 
+                          product={{
+                            group_slug: group.slug,
+                            title: group.title,
+                            image: group.image,
+                            price: group.price,
+                            maxPrice: group.maxPrice,
+                            businessName: group.businessName
+                          }} 
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between text-sm mb-4">
+                        <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                          <ShoppingBagIcon className="w-4 h-4" />
+                          {group.businessName}
+                        </span>
+                        <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                          <TagIcon className="w-4 h-4" />
+                          {group.productCount} sellers
+                        </span>
+                      </div>
+
+                      <Link
+                        href={`/group/${group.slug}`}
+                        className="block text-center bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-2.5 px-4 rounded-lg font-semibold transition duration-300 transform hover:scale-[1.02] hover:shadow-lg"
+                      >
+                        Compare Prices
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Enhanced gradient fade */}
+              <div className="absolute right-0 top-0 bottom-6 w-24 bg-gradient-to-l from-slate-50 dark:from-zinc-900 to-transparent pointer-events-none"></div>
             </div>
+
+            {/* Enhanced Show More/Less Button */}
+            {section.groups.length > productsPerRow && (
+              <div className="mt-6 text-center">
+                <button
+                  onClick={() => toggleSectionExpansion(section.categorySlug)}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-all duration-300 hover:shadow-md"
+                >
+                  {expandedSections.has(section.categorySlug) ? (
+                    <>
+                      Show Less
+                      <ChevronUpIcon className="w-4 h-4" />
+                    </>
+                  ) : (
+                    <>
+                      Show More ({section.groups.length - productsPerRow} more)
+                      <ChevronDownIcon className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </section>
+        ))}
+
+        {/* Enhanced Loading State */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading amazing deals...</p>
+          </div>
+        )}
+
+        {/* Enhanced Load More Button */}
+        {!loading && filteredSections.length > visibleSections && (
+          <div className="text-center py-12">
             <button
-              onClick={() => setPriceFilter({ min: 0, max: 50000 })}
-              className="px-4 py-2 bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-zinc-600 transition"
+              onClick={loadMore}
+              className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg inline-flex items-center gap-2"
             >
-              Reset
+              Load More Categories
+              <ChevronDownIcon className="w-5 h-5" />
             </button>
           </div>
-        </div>
-
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Popular Categories</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-            {categories.slice(0, 8).map((cat, index) => {
-              const IconComponent = getCategoryIcon(cat.main);
-              const slug = slugify(cat.main);
-              return (
-                <Link
-                  key={slug || `category-${index}`}
-                  href={`/main-category/${slug}`}
-                  className="group relative bg-white dark:bg-zinc-800 rounded-2xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-zinc-700 overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative flex flex-col items-center text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-blue-100 dark:from-orange-900/30 dark:to-blue-900/30 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <IconComponent className="w-8 h-8 text-orange-600 dark:text-orange-400" />
-                    </div>
-                    <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-tight">{cat.main}</h3>
-                    <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">Explore →</span>
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-
-        <section>
-          {loading && visibleSections === 3 ? (
-            <div className="text-center py-20">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-500 border-t-transparent mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading the best deals...</p>
-            </div>
-          ) : (
-            filteredSections.slice(0, visibleSections).map((section, i) => (
-              <div key={`section-${i}`} className="mb-16">
-                <div className="flex items-center gap-3 mb-6">
-                  <TrophyIcon className="w-7 h-7 text-orange-600" />
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Best Deals - {section.categoryTitle}</h2>
-                  <div className="bg-orange-100 dark:bg-orange-900/30 px-3 py-1 rounded-full">
-                    <span className="text-orange-700 dark:text-orange-400 text-sm font-medium">{section.groups.length} product</span>
-                  </div>
-                </div>
-                <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide scroll-smooth">
-                  {section.groups.map((g, j) => (
-                    <div key={g.slug || `group-${j}`} className="min-w-[300px] max-w-[300px] shrink-0 bg-white dark:bg-zinc-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 dark:border-zinc-700 group">
-                      <div className="relative">
-                        <img
-                          loading="lazy"
-                          src={g.image || '/no-image.png'}
-                          alt={g.title}
-                          className="h-44 w-full object-contain bg-gray-50 dark:bg-zinc-700 p-4 group-hover:scale-105 transition-transform duration-300"
-                        />
-                        {g.savingsPercent > 0 && (
-                          <div className={`absolute top-2 right-2 ${getBadgeColor(g.savingsPercent)} text-white text-xs font-bold px-2 py-1 rounded-full`}>
-                            %{Math.round(g.savingsPercent)} SAVINGS
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-4">
-                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 min-h-[2.5rem]">
-                          {g.title}
-                        </h3>
-                        <div className="flex items-center justify-between mb-2">
-                          <div>
-                            <p className="text-green-600 dark:text-green-400 font-bold text-lg">
-                              {formatPrice(g.price)}
-                            </p>
-                            {g.maxPrice > g.price && (
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                <span className="line-through">{formatPrice(g.maxPrice)}</span>
-                              </p>
-                            )}
-                          </div>
-                          <WatchlistButton productId={g.slug} />
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                          {g.businessName || 'Seller Unknown'}
-                        </p>
-                        <Link
-                          href={`/group/${g.slug}`}
-                          className="block text-center bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white py-2 rounded-xl font-semibold transition duration-200 transform hover:scale-105"
-                        >
-                          Compare Prices
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))
-          )}
-        </section>
-        
+        )}
       </div>
     </main>
   );

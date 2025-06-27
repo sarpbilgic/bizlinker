@@ -36,7 +36,7 @@ const runScraper = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('✅ MongoDB connected');
+    console.log('MongoDB connected');
 
     let business = await Business.findOne({ name: businessName });
     if (!business) {
@@ -46,7 +46,7 @@ const runScraper = async () => {
         address: businessAddress,
         location: { type: 'Point', coordinates: businessCoordinates },
       });
-      console.log('🏢 Business created');
+      console.log('Business created');
     }
 
     const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
@@ -71,7 +71,7 @@ const runScraper = async () => {
           }
         }
         if (!loadSuccess) {
-          console.warn(`❌ Failed to load ${url} after 3 tries.`);
+          console.warn(`Failed to load ${url} after 3 tries.`);
           continue;
         }
 
@@ -100,24 +100,26 @@ const runScraper = async () => {
             await Product.findOneAndUpdate(
               { productUrl },
               {
-                name: product.name,
-                price,
-                image,
-                productUrl,
-                business: business._id,
-                businessName,
-                group_title,
-                group_slug,
-                updatedAt: new Date(),
+                $set: {
+                  name: product.name,
+                  price,
+                  image,
+                  productUrl,
+                  business: business._id,
+                  businessName,
+                  group_title,
+                  group_slug,
+                  updatedAt: new Date(),
+                },
                 $setOnInsert: { createdAt: new Date() },
               },
               { upsert: true, new: true }
             );
 
-            console.log(`✅ Saved: ${product.name}`);
+            console.log(`Processed: ${product.name}`);
             await new Promise((r) => setTimeout(r, 200));
           } catch (err) {
-            console.error(`❌ Product error at ${url}:`, err.message);
+            console.error(`Product error at ${url}:`, err.message);
             continue;
           }
         }
@@ -126,11 +128,14 @@ const runScraper = async () => {
 
     await browser.close();
     await mongoose.disconnect();
-    console.log('🎉 Scraping completed.');
+    console.log('Scraping completed.');
   } catch (err) {
-    console.error('❌ Scraper execution error:', err);
+    console.error('Scraper execution error:', err);
     process.exit(1);
   }
 };
 
-runScraper();
+export default runScraper;
+
+//pm2 start scripts/digikey-scraper.js --name digikey-nightly
+//pm2 logs digikey-nightly

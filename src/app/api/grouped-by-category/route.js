@@ -5,7 +5,7 @@ import { withDB } from '@/lib/api-utils';
 export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
   const main = searchParams.get('main');
-  const limit = parseInt(searchParams.get('limit')) || 10;
+  const limit = parseInt(searchParams.get('limit')) || 30;
 
   const match = {};
   if (main) {

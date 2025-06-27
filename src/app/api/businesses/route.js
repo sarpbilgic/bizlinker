@@ -2,66 +2,28 @@
 
 import Business from '@/models/Business';
 import { NextResponse } from 'next/server';
-import { withDB, getPagination, errorResponse } from '@/lib/api-utils';
-import { z } from 'zod';
+import { withDB } from '@/lib/api-utils';
 
-export const GET = withDB(async (req) => {
-  const { searchParams } = new URL(req.url);
-  const { page, pageSize, skip, limit } = getPagination(searchParams);
-  const params = Object.fromEntries(searchParams.entries());
+export const GET = withDB(async () => {
+  try {
+    const businesses = await Business.find()
+      .select('name website')
+      .sort({ name: 1 });
 
-  const schema = z.object({
-    lat: z.preprocess((v) => parseFloat(v), z.number().finite().optional()),
-    lng: z.preprocess((v) => parseFloat(v), z.number().finite().optional()),
-    radius: z
-      .preprocess((v) => (v === '' || v === undefined ? undefined : parseFloat(v)), z.number().finite())
-      .default(30),
-  });
+    const total = await Business.countDocuments();
 
-  const parsed = schema.safeParse(params);
-  if (!parsed.success) {
-    return errorResponse(parsed.error.errors, 400);
+    return NextResponse.json({
+      data: businesses,
+      total,
+      success: true
+    });
+  } catch (error) {
+    console.error('Failed to fetch businesses:', error);
+    return NextResponse.json({
+      data: [],
+      total: 0,
+      success: false,
+      error: 'Failed to fetch businesses'
+    }, { status: 500 });
   }
-
-  const { lat, lng, radius } = parsed.data;
-
-  if (lat !== undefined && lng !== undefined) {
-    const base = [
-      {
-        $geoNear: {
-          near: { type: 'Point', coordinates: [lng, lat] },
-          distanceField: 'distance',
-          spherical: true,
-          maxDistance: radius * 1000,
-        },
-      },
-    ];
-
-    const totalRes = await Business.aggregate([...base, { $count: 'count' }]);
-    const total = totalRes[0]?.count || 0;
-
-    const businesses = await Business.aggregate([
-      ...base,
-      {
-        $project: {
-          _id: 0,
-          name: 1,
-          website: 1,
-          distance: 1,
-          coordinates: '$location.coordinates',
-        },
-      },
-      { $skip: skip },
-      { $limit: limit },
-    ]);
-
-    return NextResponse.json({ data: businesses, total, page, pageSize });
-  }
-
-  const [all, total] = await Promise.all([
-    Business.find().skip(skip).limit(limit).select('name website location'),
-    Business.countDocuments(),
-  ]);
-
-  return NextResponse.json({ data: all, total, page, pageSize });
 });

@@ -6,8 +6,9 @@ import {
   BuildingStorefrontIcon
 } from '@heroicons/react/24/outline';
 import WatchlistButton from './WatchlistButton';
+import Image from 'next/image';
 
-export default function ProductCard({ product, viewMode = 'grid' }) {
+export default function ProductCard({ product, viewMode = 'grid', showWatchlist = true }) {
   const savingsPercent = Math.round(((product.maxPrice - product.minPrice) / product.maxPrice) * 100);
   const averagePrice = product.avgPrice;
   const priceVariance = product.maxPrice - product.minPrice;
@@ -21,35 +22,43 @@ export default function ProductCard({ product, viewMode = 'grid' }) {
         viewMode === 'list' ? 'flex' : ''
       }`}
     >
-      <div className={`relative ${viewMode === 'list' ? 'w-48 flex-shrink-0' : ''}`}>
-        <img
-          src={product.image || '/no-image.png'}
-          alt={product.group_title}
-          className="w-full h-48 object-contain bg-gray-50 dark:bg-zinc-900 p-4 group-hover:scale-105 transition-transform duration-300"
-        />
-        {savingsPercent > 0 && (
-          <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-            %{savingsPercent} Difference
-          </div>
-        )}
-        <div className="absolute top-2 left-2">
-          <WatchlistButton 
-            product={{
-              id: product._id,
-              name: product.group_title,
-              image: product.image,
-              price: product.minPrice,
-              group_slug: product.group_slug,
-              businessName: product.businesses?.[0]?.businessName
-            }}
-            size="small"
+      <Link href={`/product/${product.id}`} className="block">
+        <div className={`relative ${viewMode === 'list' ? 'w-48 flex-shrink-0' : ''}`}>
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
+          {savingsPercent > 0 && (
+            <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+              %{savingsPercent} Difference
+            </div>
+          )}
+          <div className="absolute top-2 left-2">
+            {showWatchlist && (
+              <WatchlistButton 
+                product={{
+                  id: product._id,
+                  name: product.group_title,
+                  image: product.image,
+                  price: product.minPrice,
+                  group_slug: product.group_slug,
+                  businessName: product.businesses?.[0]?.businessName
+                }}
+                size="small"
+              />
+            )}
+          </div>
         </div>
-      </div>
+      </Link>
       <div className="p-4 flex-1">
-        <h3 className="font-medium text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-orange-600 transition-colors">
-          {product.group_title}
-        </h3>
+        <Link href={`/product/${product.id}`} className="block">
+          <h3 className="font-medium text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-orange-600 transition-colors">
+            {product.group_title}
+          </h3>
+        </Link>
         <div className="flex items-center gap-2 mb-3">
           <div className="flex flex-wrap gap-1">
             {product.brands?.map((brand, idx) => (
