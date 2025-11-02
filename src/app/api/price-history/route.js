@@ -7,12 +7,11 @@ export const GET = withDB(async (req) => {
   const { searchParams } = new URL(req.url);
   const params = Object.fromEntries(searchParams.entries());
 
-  // ✅ Sorgu validasyonu
   const schema = z.object({
     group_id: z.string().min(1),
     businessName: z.string().optional(),
-    start: z.string().optional(), // ISO tarih
-    end: z.string().optional(),   // ISO tarih
+    start: z.string().optional(), 
+    end: z.string().optional(),   
   });
 
   const parsed = schema.safeParse(params);
@@ -36,12 +35,11 @@ export const GET = withDB(async (req) => {
     if (end) match.createdAt.$lte = new Date(end);
   }
 
-  // ✅ Fiyat geçmişi sorgusu
   const history = await Product.find(match)
     .sort({ createdAt: 1 })
     .select('price businessName createdAt -_id');
 
-  // ✅ Grafik için biçimlendirme
+
   const formatted = history.map(entry => ({
     price: entry.price,
     businessName: entry.businessName,

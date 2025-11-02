@@ -22,6 +22,7 @@ import {
 import SecuritySettings from '@/components/profile/SecuritySettings';
 import RecentlyViewed from '@/components/profile/RecentlyViewed';
 import ChangePassword from '@/components/profile/ChangePassword';
+import BizlinkerLogo from '@/components/BizlinkerLogo';
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
@@ -43,7 +44,7 @@ export default function ProfilePage() {
 
   const checkAuth = async () => {
     try {
-      // localStorage'dan user bilgilerini al
+
       const userFromStorage = localStorage.getItem('user');
       if (userFromStorage) {
         const userData = JSON.parse(userFromStorage);
@@ -133,14 +134,7 @@ export default function ProfilePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-blue-500/10"></div>
         <div className="relative max-w-4xl mx-auto px-4 py-16">
           <div className="flex items-center justify-between">
-            <Link href="/" className="inline-flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-blue-600 rounded-xl flex items-center justify-center">
-                <SparklesIcon className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
-                BizLinker
-              </span>
-            </Link>
+            <BizlinkerLogo />
             
             <button
               onClick={handleLogout}

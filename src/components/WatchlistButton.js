@@ -1,46 +1,71 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { HeartIcon as HeartIconOutline } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
+// Cache watchlist globally to prevent redundant API calls
+let watchlistCache = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 60000; // 1 minute
+
 export default function WatchlistButton({ product, className = "", size = "default" }) {
   const { user } = useAuth();
   const router = useRouter();
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [loading, setLoading] = useState(false);
+  const hasFetchedRef = useRef(false);
+
+  // Only depend on primitives, not the entire object
+  const userId = user?.id;
+  const groupSlug = product?.group_slug;
 
   useEffect(() => {
-    if (user && product?.group_slug) {
+    if (userId && groupSlug && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
       checkIfInWatchlist();
     }
-  }, [user, product]);
+  }, [userId, groupSlug]);
 
   const checkIfInWatchlist = async () => {
-    if (!user || !product?.group_slug) return;
+    if (!userId || !groupSlug) return;
 
     try {
-      // API'den kontrol et
-      const response = await axios.get('/api/watchlist');
-      const apiWatchlist = response.data.data;
-      const isInApiList = apiWatchlist.some(item => item.group_slug === product.group_slug);
+      // First check localStorage (fastest)
+      const savedWatchlist = localStorage.getItem(`watchlist_${userId}`);
+      if (savedWatchlist) {
+        const localWatchlist = JSON.parse(savedWatchlist);
+        const isInLocal = localWatchlist.some(item => item.group_slug === groupSlug);
+        setIsInWatchlist(isInLocal);
+      }
+
+      // Use cached watchlist or fetch if cache is stale
+      const now = Date.now();
+      if (!watchlistCache || !cacheTimestamp || (now - cacheTimestamp) > CACHE_DURATION) {
+        const response = await axios.get('/api/watchlist');
+        watchlistCache = response.data.data;
+        cacheTimestamp = now;
+      }
+
+      // Check against cached API data
+      const isInApiList = watchlistCache.some(item => item.group_slug === groupSlug);
       setIsInWatchlist(isInApiList);
 
-      // localStorage'ı API ile senkronize et
-      const savedWatchlist = localStorage.getItem(`watchlist_${user.id}`);
-      let localWatchlist = savedWatchlist ? JSON.parse(savedWatchlist) : [];
-
-      if (isInApiList && !localWatchlist.some(item => item.group_slug === product.group_slug)) {
-        localWatchlist.unshift({
-          ...product,
-          addedDate: new Date().toISOString()
-        });
-        localStorage.setItem(`watchlist_${user.id}`, JSON.stringify(localWatchlist));
-      } else if (!isInApiList && localWatchlist.some(item => item.group_slug === product.group_slug)) {
-        localWatchlist = localWatchlist.filter(item => item.group_slug !== product.group_slug);
-        localStorage.setItem(`watchlist_${user.id}`, JSON.stringify(localWatchlist));
+      // Sync localStorage with API if needed
+      if (savedWatchlist) {
+        let localWatchlist = JSON.parse(savedWatchlist);
+        if (isInApiList && !localWatchlist.some(item => item.group_slug === groupSlug)) {
+          localWatchlist.unshift({
+            ...product,
+            addedDate: new Date().toISOString()
+          });
+          localStorage.setItem(`watchlist_${userId}`, JSON.stringify(localWatchlist));
+        } else if (!isInApiList && localWatchlist.some(item => item.group_slug === groupSlug)) {
+          localWatchlist = localWatchlist.filter(item => item.group_slug !== groupSlug);
+          localStorage.setItem(`watchlist_${userId}`, JSON.stringify(localWatchlist));
+        }
       }
     } catch (error) {
       console.error('Watchlist could not be checked:', error);
@@ -72,6 +97,10 @@ export default function WatchlistButton({ product, className = "", size = "defau
           localStorage.setItem(`watchlist_${user.id}`, JSON.stringify(updatedWatchlist));
         }
         
+        // Clear cache to force refresh
+        watchlistCache = null;
+        cacheTimestamp = null;
+        
         setIsInWatchlist(false);
       } else {
         // Favorilere ekle
@@ -85,6 +114,10 @@ export default function WatchlistButton({ product, className = "", size = "defau
           addedDate: new Date().toISOString()
         });
         localStorage.setItem(`watchlist_${user.id}`, JSON.stringify(watchlist));
+        
+        // Clear cache to force refresh
+        watchlistCache = null;
+        cacheTimestamp = null;
         
         setIsInWatchlist(true);
       }

@@ -14,9 +14,19 @@ if (!cached) {
 
 export async function connectDB() {
   if (cached.conn) return cached.conn;
+  
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGO_URI);
+    const opts = {
+      bufferCommands: false,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      family: 4, // Use IPv4, skip trying IPv6
+    };
+    
+    cached.promise = mongoose.connect(MONGO_URI, opts);
   }
+  
   cached.conn = await cached.promise;
   return cached.conn;
 }

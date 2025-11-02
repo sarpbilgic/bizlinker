@@ -51,7 +51,14 @@ export const POST = withDB(async (req) => {
 
     const { productId } = parsed.data;
 
-    // Add to recently viewed array (max 20 items, newest first)
+    // Remove duplicate if exists, then add to front (max 20 items, newest first)
+    await User.findByIdAndUpdate(
+      userData.id,
+      {
+        $pull: { recentlyViewed: productId }
+      }
+    );
+
     await User.findByIdAndUpdate(
       userData.id,
       {

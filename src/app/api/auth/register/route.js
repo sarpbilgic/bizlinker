@@ -31,8 +31,7 @@ export const POST = withDB(async (req) => {
 
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    console.log('Registering user with email:', email);
-    console.log('Salt rounds used:', saltRounds);
+
 
     await User.create({
       name,

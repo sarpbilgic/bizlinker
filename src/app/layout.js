@@ -17,13 +17,9 @@ export const metadata = {
     type: 'website',
   },
   icons: {
-    icon: [
-      {
-        url: '/bizlinker_logo.png',
-        sizes: '32x32',
-        type: 'image/png'
-      }
-    ]
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%23f97316;stop-opacity:1' /><stop offset='100%' style='stop-color:%23ea580c;stop-opacity:1' /></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23grad)'/><text x='50%' y='50%' text-anchor='middle' dy='0.35em' font-family='Arial,sans-serif' font-size='18' font-weight='bold' fill='white'>B</text></svg>",
+    shortcut: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%23f97316;stop-opacity:1' /><stop offset='100%' style='stop-color:%23ea580c;stop-opacity:1' /></linearGradient></defs><rect width='32' height='32' rx='6' fill='url(%23grad)'/><text x='50%' y='50%' text-anchor='middle' dy='0.35em' font-family='Arial,sans-serif' font-size='18' font-weight='bold' fill='white'>B</text></svg>",
+    apple: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><defs><linearGradient id='grad' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' style='stop-color:%23f97316;stop-opacity:1' /><stop offset='100%' style='stop-color:%23ea580c;stop-opacity:1' /></linearGradient></defs><rect width='180' height='180' rx='32' fill='url(%23grad)'/><text x='50%' y='50%' text-anchor='middle' dy='0.35em' font-family='Arial,sans-serif' font-size='96' font-weight='bold' fill='white'>B</text></svg>"
   }
 };
 

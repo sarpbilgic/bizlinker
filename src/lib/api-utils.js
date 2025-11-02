@@ -70,7 +70,7 @@ export function withDB(handler) {
   };
 }
 
-export function getPagination(searchParams, defaultPageSize = 10000, maxPageSize = 10000) {
+export function getPagination(searchParams, defaultPageSize = 50, maxPageSize = 1000) {
   const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
   let pageSize = parseInt(searchParams.get('pageSize') || defaultPageSize, 10);
   if (isNaN(pageSize) || pageSize <= 0) pageSize = defaultPageSize;
