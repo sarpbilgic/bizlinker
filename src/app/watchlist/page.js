@@ -158,7 +158,7 @@ export default function WatchlistPage() {
               <HeartIconOutline className="w-16 h-16 text-gray-400" />
             </div>
             <h3 className="text-2xl font-bold text-gray-600 dark:text-gray-400 mb-4">
-              You don't have any favorite products yet.
+              You don&apos;t have any favorite products yet.
             </h3>
             <p className="text-gray-500 dark:text-gray-500 text-lg mb-8 max-w-md mx-auto">
               You can track price changes by adding your favorite products to the favorites.
@@ -301,7 +301,7 @@ export default function WatchlistPage() {
                   No search results found
                 </h3>
                 <p className="text-gray-500 dark:text-gray-500">
-                  No matches found in your favorite products for the search term "{searchTerm}"
+                  No matches found in your favorite products for the search term &ldquo;{searchTerm}&rdquo;
                 </p>
                 <button
                   onClick={() => setSearchTerm('')}

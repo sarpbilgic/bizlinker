@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { HeartIcon as HeartIconOutline } from '@heroicons/react/24/outline';
@@ -22,14 +22,7 @@ export default function WatchlistButton({ product, className = "", size = "defau
   const userId = user?.id;
   const groupSlug = product?.group_slug;
 
-  useEffect(() => {
-    if (userId && groupSlug && !hasFetchedRef.current) {
-      hasFetchedRef.current = true;
-      checkIfInWatchlist();
-    }
-  }, [userId, groupSlug]);
-
-  const checkIfInWatchlist = async () => {
+  const checkIfInWatchlist = useCallback(async () => {
     if (!userId || !groupSlug) return;
 
     try {
@@ -70,7 +63,14 @@ export default function WatchlistButton({ product, className = "", size = "defau
     } catch (error) {
       console.error('Watchlist could not be checked:', error);
     }
-  };
+  }, [userId, groupSlug, product]);
+
+  useEffect(() => {
+    if (userId && groupSlug && !hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      checkIfInWatchlist();
+    }
+  }, [userId, groupSlug, checkIfInWatchlist]);
 
   const toggleWatchlist = async () => {
     if (!user) {

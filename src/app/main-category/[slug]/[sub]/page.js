@@ -67,7 +67,7 @@ export default function SubCategoryPage() {
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Category Not Found</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">The subcategory you're looking for doesn't exist.</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">The subcategory you&apos;re looking for doesn&apos;t exist.</p>
             <Link href="/" className="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
               Go Home
             </Link>

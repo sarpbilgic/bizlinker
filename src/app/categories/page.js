@@ -148,10 +148,10 @@ export default function CategoriesPage() {
             <div className="text-center mt-16">
               <div className="bg-white dark:bg-zinc-800 rounded-2xl p-8 shadow-lg border border-gray-200 dark:border-zinc-700 max-w-2xl mx-auto">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                  Can't Find the Category You're Looking For?
+                  Can&apos;t Find the Category You&apos;re Looking For?
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  You can find the product you're looking for and compare prices by searching on the homepage.
+                  You can find the product you&apos;re looking for and compare prices by searching on the homepage.
                 </p>
                 <Link
                   href="/"

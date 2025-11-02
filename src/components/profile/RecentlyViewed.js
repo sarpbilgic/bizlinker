@@ -68,7 +68,7 @@ export default function RecentlyViewed() {
           Recently Viewed Products
         </h3>
         <div className="text-center text-gray-600 dark:text-gray-400 py-8">
-          You haven't viewed any products yet.
+          You haven&apos;t viewed any products yet.
         </div>
       </div>
     );

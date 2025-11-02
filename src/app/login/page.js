@@ -170,7 +170,7 @@ export default function LoginPage() {
             {/* Register Link */}
             <div className="bg-gray-50 dark:bg-zinc-700/50 px-8 py-6 border-t border-gray-200 dark:border-zinc-600">
               <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link 
                   href="/register" 
                   className="font-semibold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"

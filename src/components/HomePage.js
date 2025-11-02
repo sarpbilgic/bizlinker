@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import axios from 'axios';
 import {
   CpuChipIcon,
@@ -95,7 +96,13 @@ export default function MainCategoryPage() {
           <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide scroll-smooth snap-x snap-mandatory">
             {products.flatMap(p => p.groups).map((g, i) => (
               <div key={i} className="snap-start min-w-[250px] max-w-[250px] bg-white dark:bg-zinc-800 rounded-xl shadow p-4 border dark:border-zinc-700">
-                <img src={g.image || '/no-image.png'} className="h-36 w-full object-contain mb-3" alt={g.title} />
+                <Image 
+                  src={g.image || '/no-image.png'} 
+                  width={250} 
+                  height={144} 
+                  className="h-36 w-full object-contain mb-3" 
+                  alt={g.title || 'Product image'} 
+                />
                 <h3 className="text-sm font-semibold text-gray-800 dark:text-white mb-1 line-clamp-2">{g.title}</h3>
                 <p className="text-green-600 font-bold text-lg">{g.price?.toLocaleString('tr-TR')} ₺</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{g.businessName || 'Unknown Seller'}</p>

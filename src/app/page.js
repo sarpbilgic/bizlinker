@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import axios from 'axios';
 import useSWR from 'swr';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   MagnifyingGlassIcon,
   StarIcon,
@@ -354,9 +355,11 @@ export default function HomePage() {
                   >
                     <div className="relative">
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                      <img
+                      <Image
                         src={group.image || '/no-image.png'}
-                        alt={group.title}
+                        alt={group.title || 'Product image'}
+                        width={300}
+                        height={192}
                         className="w-full h-48 object-contain bg-white dark:bg-zinc-900 p-4 group-hover:scale-105 transition-transform duration-300"
                       />
                       {group.savingsPercent > 0 && (

@@ -79,7 +79,7 @@ export default async function ProductPage({ params }) {
             Product Not Found
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            The product you're looking for doesn't exist or has been removed.
+            The product you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
         </div>
       </div>
