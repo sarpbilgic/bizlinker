@@ -2,8 +2,6 @@
 
 A comprehensive price comparison platform for electronics and consumer goods in North Cyprus (TRNC). Compare prices across multiple stores instantly and find the best deals.
 
-![BizLinker](public/bizlinker_logo.png)
-
 ## 🚀 Features
 
 - **Real-time Price Comparison** - Compare prices across 8+ electronics stores from North Cyprus
